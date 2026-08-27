@@ -1,0 +1,95 @@
+{
+    "name": "Villshärads Fotbollsgolf",
+    "court": [
+        {
+            "id": 1,
+            "par": 3,
+            "info": "Bollen över stocken"
+        },
+        {
+            "id": 2,
+            "par": 4,
+            "info": "Runda stolparna"
+        },
+        {
+            "id": 3,
+            "par": 4,
+            "info": "Runda stolpen"
+        },
+        {
+            "id": 4,
+            "par": 6,
+            "info": "Bollen igenom båda däcken"
+        },
+        {
+            "id": 5,
+            "par": 4,
+            "info": "Över hindret"
+        },
+        {
+            "id": 6,
+            "par": 3,
+            "info": "Bollen skall i däcket"
+        },
+        {
+            "id": 7,
+            "par": 4,
+            "info": "Runda stolpen"
+        },
+        {
+            "id": 8,
+            "par": 4,
+            "info": "Över stenmuren"
+        },
+        {
+            "id": 9,
+            "par": 5,
+            "info": "Bollen genom hålet i planket"
+        },
+        {
+            "id": 10,
+            "par": 5,
+            "info": "Bollen över första hindret"
+        },
+        {
+            "id": 11,
+            "par": 4,
+            "info": "Bollen ska under stocken"
+        },
+        {
+            "id": 12,
+            "par": 4,
+            "info": "Rak bana med vattenhinder"
+        },
+        {
+            "id": 13,
+            "par": 3,
+            "info": "Bollen behöver bara passera första raden hinder"
+        },
+        {
+            "id": 14,
+            "par": 4,
+            "info": "Runda stolpen"
+        },
+        {
+            "id": 15,
+            "par": 5,
+            "info": "Runda stolparna"
+        },
+        {
+            "id": 16,
+            "par": 4,
+            "info": "Runda stolpen"
+        },
+        {
+            "id": 17,
+            "par": 5,
+            "info": "Barn & Damer: under ribban. Herrar: över ribban."
+        },
+        {
+            "id": 18,
+            "par": 6,
+            "info": "Bollen ska genom hindret"
+        }
+    ]
+}
