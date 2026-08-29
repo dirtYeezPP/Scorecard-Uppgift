@@ -1,48 +1,74 @@
+//printPlayers(getPlayers());
+
 // CREATE
-
-// CREATE THE FORM 
-
-function createForm() {
-
-    const main = qs('main');
-    const div = ce('div', 'form'); // div med klassen form 
-    const form = ce('form');
-    const inp1 = ce('input');
-    const inp2 = ce('input');
-    const inp3 = ce('input');
-    const submit = ce('input', 'submit');
-
-    inp1.type = "text"; 
-    inp1.placeholder = "name first player?";
-    inp2.type = "text";
-    inp2.placeholder = "name second player?";
-    inp3.type = "text";
-    inp3.placeholder = "name third player?";
-
-    submit.type = "submit";
-    submit.value = "save";
-
-    form.appendChild(inp1);
-    form.appendChild(inp2);
-    form.appendChild(inp3);
-    form.appendChild(submit);
-
-    form.addEventListener('submit', (e) => {
+document.querySelector('.addPlayer form')
+    .addEventListener('submit', e => {
         e.preventDefault();
-        alert("rawr");
-    });
 
-    div.appendChild(form);
-    main.appendChild(div);
+        const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
+        if(!name) return alert("even ghosts have names bro cmon");
+        addPlayer(name);
+    })
 
+function addPlayer(name) {
+    if(!name) return console.log("even ghosts have names cmon bro");
+    
+    const player = { name, id: "id_" + Date.now() }
+
+    const players = getPlayers() || []; 
+
+    players.push(player);
+    saveToStorage(players);
+    console.log(localStorage);
+    printPlayers([player]);
 }
 
 
 // READ
 
+/**
+ * 
+ * @param {object} player 
+ * 
+ */
+
+function playerInHtml(player) {
+    const div = ce('div');
+    div.classList.add('player');
+    div.id = player.id;
+
+    const title = ce('h3');
+    title.innerText = player.name;
+
+    const rmButton = ce('button');
+    rmButton.innerText = "remove"
+    rmButton.addEventListener('click', () => { removePlayer(player.id) })
+
+    div.appendChild(title);
+    div.appendChild(rmButton);
+    return div;
+}
+
+function printPlayers(players) {
+    const playersBox = document.querySelector('.players');
+    for (let player of players) {
+        playersBox.appendChild(playerInHtml(player));
+    }
+}
+
 // UPDATE
+function changePlayerScore() {
+
+}
 
 // DELETE 
+function removePlayer(id) {
+    const players = getPlayers();
+    const newPlayerList = players.filter(p => p.id != id);
+    if (players.length == newPlayerList.length) console.log("no player removed");
+    saveToStorage(newPlayerList);
+    document.getElementById(id).remove();
+}
 
 // HELPER FUNCTIONS 
 
@@ -51,20 +77,32 @@ function qs(selector) {
     const el = document.querySelectorAll(selector);
 
     if (el.length == 1) return el[0]; // return one element only  
-    return el;  
+    return el;
 }
 
 // CREATE ELEMENT 
-function ce(elementType, className = null) {  
+function ce(elementType, className = null) {
     const el = document.createElement(elementType);
-    if (className) el.classList.add(className); 
-    return el; 
+    if (className) el.classList.add(className);
+    return el;
 }
 
-// GET SCORE CARD FROM JSON FILE 
-async function getScoreCard(){
+// GET SCORE CARD ROUNDS FROM JSON FILE 
+async function getGameInfo() {
     const jsonCard = await fetch("info.json");
     const card = await jsonCard.json(); //automatic JsonParse if you will 
     console.log(card);
-    return card; 
+    return card;
+}
+
+function saveToStorage(data) {
+    const json = JSON.stringify(data);
+    localStorage.setItem('List', json);
+}
+
+function getPlayers() {
+    let list = localStorage.getItem('List');
+    if (!localStorage.length) return [];
+    list = JSON.parse(list);
+    return list
 }
