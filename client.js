@@ -12,7 +12,7 @@ document.querySelector('.addPlayer form')
 
 function addPlayer(name) {
     if(!name) return console.log("even ghosts have names cmon bro");
-    
+
     const player = { name, id: "id_" + Date.now() }
 
     const players = getPlayers() || []; 
@@ -23,8 +23,9 @@ function addPlayer(name) {
     printPlayers([player]);
 }
 
+// READ SCORE STUFF 
 
-// READ
+// READ PLAYERS 
 
 /**
  * 
@@ -44,8 +45,18 @@ function playerInHtml(player) {
     rmButton.innerText = "remove"
     rmButton.addEventListener('click', () => { removePlayer(player.id) })
 
+    const addScoreBtn = ce('button');
+    addScoreBtn.innerText = "+"
+    const rmScoreBtn = ce('button');
+    rmScoreBtn.innerText = "-"; 
+
+    addScoreBtn.addEventListener('click', ()=>{addPlayerScore(player.id)})
+    rmScoreBtn.addEventListener('click', ()=>{rmPlayerScore(player.id)})
+
     div.appendChild(title);
     div.appendChild(rmButton);
+    div.appendChild(addScoreBtn);
+    div.appendChild(rmScoreBtn); 
     return div;
 }
 
@@ -56,10 +67,20 @@ function printPlayers(players) {
     }
 }
 
-// UPDATE
-function changePlayerScore() {
+// UPDATE SCORES 
+function rmPlayerScore(id) {
+    const players = getPlayers(); 
+    const player = players.find(p=>p.id==id); 
 
+    console.log(player);
 }
+
+function addPlayerScore(id){
+    const players = getPlayers(); 
+    const player = players.find(p=>p.id==id);
+
+    console.log(player);
+}   
 
 // DELETE 
 function removePlayer(id) {
