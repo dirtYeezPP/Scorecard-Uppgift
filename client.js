@@ -93,13 +93,6 @@ function removePlayer(id) {
 
 // HELPER FUNCTIONS 
 
-// QUERY SELECTOR 
-function qs(selector) {
-    const el = document.querySelectorAll(selector);
-
-    if (el.length == 1) return el[0]; // return one element only  
-    return el;
-}
 
 // CREATE ELEMENT 
 function ce(elementType, className = null) {
