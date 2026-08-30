@@ -1,6 +1,6 @@
 printPlayers(getPlayers());
- 
-window.addEventListener('load', async ()=>{ await printGameInfo()})
+
+window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
 
 // CREATE
 document.querySelector('.addPlayer form')
@@ -24,33 +24,55 @@ function addPlayer(name) {
     console.log(localStorage);
     //printPlayers([player]);
     printPlayers(players);
+    printGameInfo(players)
 }
 
 // READ GAME INFO 
 
-function gameInfoHtml(court) {
-    const infoDiv = ce('div');
+function gameInfoHtml(court, players) {
+    const infoDiv = ce('tr');
     infoDiv.classList.add('info');
-    infoDiv.id = court.id; 
+    infoDiv.id = court.id;
 
-    const infoTitle = ce('h3')
-    infoTitle.innerText = "court:"+court.par;
-    const ruleDesc = ce('i');
-    ruleDesc.innerText = court.info; 
+    const courtNum = ce('td')
+    courtNum.innerText = court.par;
 
-    infoDiv.appendChild(infoTitle)
-    infoDiv.appendChild(ruleDesc)
-    return infoDiv; 
+    infoDiv.appendChild(courtNum);
+
+    for (let player of players) {
+        const playerScore = ce('td');
+        playerScore.innerText = "s";
+        infoDiv.appendChild(playerScore);
+    }
+    
+    return infoDiv;
 }
 
-async function printGameInfo() {
-    console.log("hej")
+async function printGameInfo(players) {
     let gameInfo = await getGameInfo();
 
-    const infoBox = document.querySelector(".information");
+    const infoBox = document.querySelector(".scoreTableDyn");
+
+    infoBox.replaceChildren();
+
+    const courtTitleRow = ce('tr');
+    const courtTitle = ce('th');
+    courtTitle.innerText = "court";
+    courtTitleRow.appendChild(courtTitle);
+    const table = ce('table');
+    table.appendChild(courtTitleRow);
+    infoBox.appendChild(table);
+
+
+    for (let player of players) {
+        const playerTitle = ce('th')
+        playerTitle.innerText = player.name;
+        courtTitleRow.appendChild(playerTitle);
+    }
+
     //infoBox.replaceChildren();
     for (let court of gameInfo.court) {
-        infoBox.appendChild(gameInfoHtml(court));
+        table.appendChild(gameInfoHtml(court, players));
     }
 }
 
@@ -74,18 +96,8 @@ function playerInHtml(player) {
     rmButton.innerText = "remove"
     rmButton.addEventListener('click', () => { removePlayer(player.id) })
 
-    const addScoreBtn = ce('button');
-    addScoreBtn.innerText = "+"
-    const rmScoreBtn = ce('button');
-    rmScoreBtn.innerText = "-";
-
-    addScoreBtn.addEventListener('click', () => { addPlayerScore(player.id) })
-    rmScoreBtn.addEventListener('click', () => { rmPlayerScore(player.id) })
-
     div.appendChild(title);
     div.appendChild(rmButton);
-    div.appendChild(rmScoreBtn);
-    div.appendChild(addScoreBtn);
     return div;
 }
 
@@ -98,19 +110,7 @@ function printPlayers(players) {
 }
 
 // UPDATE SCORES 
-function rmPlayerScore(id) {
-    const players = getPlayers();
-    const player = players.find(p => p.id == id);
 
-    console.log(player);
-}
-
-function addPlayerScore(id) {
-    const players = getPlayers();
-    const player = players.find(p => p.id == id);
-
-    console.log(player);
-}
 
 // DELETE 
 function removePlayer(id) {
@@ -120,6 +120,7 @@ function removePlayer(id) {
     saveToStorage(newPlayerList);
     //document.getElementById(id).remove();
     printPlayers(newPlayerList);
+    printGameInfo(newPlayerList);
 }
 
 // HELPER FUNCTIONS 
