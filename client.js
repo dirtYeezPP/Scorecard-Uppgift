@@ -1,4 +1,6 @@
-//printPlayers(getPlayers());
+printPlayers(getPlayers());
+ 
+window.addEventListener('load', async ()=>{ await printGameInfo()})
 
 // CREATE
 document.querySelector('.addPlayer form')
@@ -6,24 +8,51 @@ document.querySelector('.addPlayer form')
         e.preventDefault();
 
         const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
-        if(!name) return alert("even ghosts have names bro cmon");
+        if (!name) return alert("even ghosts have names bro cmon");
         addPlayer(name);
     })
 
 function addPlayer(name) {
-    if(!name) return console.log("even ghosts have names cmon bro");
+    if (!name) return console.log("even ghosts have names cmon bro");
 
     const player = { name, id: "id_" + Date.now() }
 
-    const players = getPlayers() || []; 
+    const players = getPlayers() || [];
 
     players.push(player);
     saveToStorage(players);
     console.log(localStorage);
-    printPlayers([player]);
+    //printPlayers([player]);
+    printPlayers(players);
 }
 
-// READ SCORE STUFF 
+// READ GAME INFO 
+
+function gameInfoHtml(court) {
+    const infoDiv = ce('div');
+    infoDiv.classList.add('info');
+    infoDiv.id = court.id; 
+
+    const infoTitle = ce('h3')
+    infoTitle.innerText = "court:"+court.par;
+    const ruleDesc = ce('i');
+    ruleDesc.innerText = court.info; 
+
+    infoDiv.appendChild(infoTitle)
+    infoDiv.appendChild(ruleDesc)
+    return infoDiv; 
+}
+
+async function printGameInfo() {
+    console.log("hej")
+    let gameInfo = await getGameInfo();
+
+    const infoBox = document.querySelector(".information");
+    //infoBox.replaceChildren();
+    for (let court of gameInfo.court) {
+        infoBox.appendChild(gameInfoHtml(court));
+    }
+}
 
 // READ PLAYERS 
 
@@ -48,20 +77,21 @@ function playerInHtml(player) {
     const addScoreBtn = ce('button');
     addScoreBtn.innerText = "+"
     const rmScoreBtn = ce('button');
-    rmScoreBtn.innerText = "-"; 
+    rmScoreBtn.innerText = "-";
 
-    addScoreBtn.addEventListener('click', ()=>{addPlayerScore(player.id)})
-    rmScoreBtn.addEventListener('click', ()=>{rmPlayerScore(player.id)})
+    addScoreBtn.addEventListener('click', () => { addPlayerScore(player.id) })
+    rmScoreBtn.addEventListener('click', () => { rmPlayerScore(player.id) })
 
     div.appendChild(title);
     div.appendChild(rmButton);
+    div.appendChild(rmScoreBtn);
     div.appendChild(addScoreBtn);
-    div.appendChild(rmScoreBtn); 
     return div;
 }
 
 function printPlayers(players) {
     const playersBox = document.querySelector('.players');
+    playersBox.replaceChildren();
     for (let player of players) {
         playersBox.appendChild(playerInHtml(player));
     }
@@ -69,18 +99,18 @@ function printPlayers(players) {
 
 // UPDATE SCORES 
 function rmPlayerScore(id) {
-    const players = getPlayers(); 
-    const player = players.find(p=>p.id==id); 
+    const players = getPlayers();
+    const player = players.find(p => p.id == id);
 
     console.log(player);
 }
 
-function addPlayerScore(id){
-    const players = getPlayers(); 
-    const player = players.find(p=>p.id==id);
+function addPlayerScore(id) {
+    const players = getPlayers();
+    const player = players.find(p => p.id == id);
 
     console.log(player);
-}   
+}
 
 // DELETE 
 function removePlayer(id) {
@@ -88,7 +118,8 @@ function removePlayer(id) {
     const newPlayerList = players.filter(p => p.id != id);
     if (players.length == newPlayerList.length) console.log("no player removed");
     saveToStorage(newPlayerList);
-    document.getElementById(id).remove();
+    //document.getElementById(id).remove();
+    printPlayers(newPlayerList);
 }
 
 // HELPER FUNCTIONS 
