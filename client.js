@@ -32,19 +32,36 @@ function addPlayer(name) {
 function gameInfoHtml(court, players) {
     const infoDiv = ce('tr');
     infoDiv.classList.add('info');
-    infoDiv.id = court.id;
+    infoDiv.id = "courtId_" + court.id;
+
+    const parNum = ce('td')
+    parNum.innerText = "hål: " + court.par;
 
     const courtNum = ce('td')
-    courtNum.innerText = court.par;
+    courtNum.innerText = court.id;
 
     infoDiv.appendChild(courtNum);
+    infoDiv.appendChild(parNum);
+
 
     for (let player of players) {
-        const playerScore = ce('td');
-        playerScore.innerText = "s";
-        infoDiv.appendChild(playerScore);
+        const playerScoreField = ce('td');
+        const increasePlayerScore = ce('button'); 
+        increasePlayerScore.innerText = '+';
+        increasePlayerScore.addEventListener('click', ()=>{ })
+        const decreasePlayerScore = ce('button'); 
+        decreasePlayerScore.innerText = '-';
+        decreasePlayerScore.addEventListener('click', ()=>{ }) 
+
+        playerScoreField.innerText = player.score || 0;
+        
+        
+  
+        playerScoreField.appendChild(increasePlayerScore);
+        playerScoreField.appendChild(decreasePlayerScore); 
+        infoDiv.appendChild(playerScoreField);
     }
-    
+
     return infoDiv;
 }
 
@@ -56,9 +73,16 @@ async function printGameInfo(players) {
     infoBox.replaceChildren();
 
     const courtTitleRow = ce('tr');
+
+    const parTitle = ce('th');
+    parTitle.innerText = "par"
+
     const courtTitle = ce('th');
     courtTitle.innerText = "court";
+
     courtTitleRow.appendChild(courtTitle);
+    courtTitleRow.appendChild(parTitle)
+
     const table = ce('table');
     table.appendChild(courtTitleRow);
     infoBox.appendChild(table);

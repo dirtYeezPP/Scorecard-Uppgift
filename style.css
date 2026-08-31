@@ -8,3 +8,12 @@ main{
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
 }
+
+table, th, td{
+    border: 1px solid rgb(92, 43, 92);
+    background-color: rgb(175, 152, 175);
+}
+
+td{
+    background-color: rgb(202, 186, 202);
+}
