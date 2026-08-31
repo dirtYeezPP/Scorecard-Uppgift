@@ -48,10 +48,10 @@ function gameInfoHtml(court, players) {
         const playerScoreField = ce('td');
         const increasePlayerScore = ce('button'); 
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', ()=>{ })
+        increasePlayerScore.addEventListener('click', ()=>{ increaseScore(player.score) }) // dunno what to send in here yet 
         const decreasePlayerScore = ce('button'); 
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', ()=>{ }) 
+        decreasePlayerScore.addEventListener('click', ()=>{ decreaseScore(player.score) }) // dunno, maybe score? maybe. 
 
         playerScoreField.innerText = player.score || 0;
         
@@ -99,6 +99,22 @@ async function printGameInfo(players) {
         table.appendChild(gameInfoHtml(court, players));
     }
 }
+
+// SCORE CONTROL - NOT SURE WHAT TO DO HERE YET. 
+
+function increaseScore(score){
+
+    
+
+}
+
+function decreaseScore(score){
+
+    if(score == 0) return; 
+
+
+
+}   
 
 // READ PLAYERS 
 
