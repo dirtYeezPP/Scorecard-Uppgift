@@ -7,9 +7,8 @@ document.querySelector('.addPlayer form')
     .addEventListener('submit', e => {
         e.preventDefault();
 
-        const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
-        //const score = parseInt(e.target.score.value) || 0; // default score to 0 if not provided (i have to check ts) 
-        const score = 0; // default score to 0 if not provided (i have to check ts)
+        const name = e.target.name.value.trim().replaceAll(/\s+/g, "_"); 
+        const score = [0]; // default score to 0 if not provided 
 
         if (!name) return alert("even ghosts have names bro cmon");
         addPlayer(name, score);
