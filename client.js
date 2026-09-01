@@ -52,10 +52,10 @@ function gameInfoHtml(court, players) {
         const playerScoreField = ce('td');
         const increasePlayerScore = ce('button'); 
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', ()=>{ increaseScore(players, player.id) }) // dunno what to send in here yet 
+        increasePlayerScore.addEventListener('click', ()=>{ increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
         const decreasePlayerScore = ce('button'); 
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', ()=>{ decreaseScore(players, player.id) })  
+        decreasePlayerScore.addEventListener('click', ()=>{ decreaseScore(players, player.id, court.id) })  
 
         playerScoreField.innerText = player.score || 0;
         
@@ -105,7 +105,7 @@ async function printGameInfo(players) {
 
 // SCORE CONTROL - NOT SURE WHAT TO DO HERE YET. 
 
-function increaseScore(players, id){
+function increaseScore(players, id, courtId){
 
     const player = players.find(p => p.id == id);
 
