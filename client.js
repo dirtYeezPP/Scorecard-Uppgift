@@ -8,7 +8,8 @@ document.querySelector('.addPlayer form')
         e.preventDefault();
 
         const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
-        const score = parseInt(e.target.score.value) || 0; // default score to 0 if not provided (i have to check ts) 
+        //const score = parseInt(e.target.score.value) || 0; // default score to 0 if not provided (i have to check ts) 
+        const score = 0; // default score to 0 if not provided (i have to check ts)
 
         if (!name) return alert("even ghosts have names bro cmon");
         addPlayer(name, score);
@@ -32,7 +33,7 @@ function addPlayer(name, score) {
 
 // READ GAME INFO 
 
-function gameInfoHtml(court, players, score) {
+function gameInfoHtml(court, players) {
     const infoDiv = ce('tr');
     infoDiv.classList.add('info');
     infoDiv.id = "courtId_" + court.id;
@@ -51,10 +52,10 @@ function gameInfoHtml(court, players, score) {
         const playerScoreField = ce('td');
         const increasePlayerScore = ce('button'); 
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', ()=>{ increaseScore(players, player.score, player.id) }) // dunno what to send in here yet 
+        increasePlayerScore.addEventListener('click', ()=>{ increaseScore(players, player.id) }) // dunno what to send in here yet 
         const decreasePlayerScore = ce('button'); 
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', ()=>{ decreaseScore(players, player.score, player.id) })  
+        decreasePlayerScore.addEventListener('click', ()=>{ decreaseScore(players, player.id) })  
 
         playerScoreField.innerText = player.score || 0;
         
@@ -107,20 +108,21 @@ async function printGameInfo(players) {
 function increaseScore(players, id){
 
     const player = players.find(p => p.id == id);
+
     player.score += 1; 
      
     saveToStorage(players);
-    gameinfoHtml(court, players, player.score);
+    printGameInfo(players);
     
 }
 
-function decreaseScore(players, id){
+function decreaseScore(players, id, courtId){
 
     const player = players.find(p => p.id == id);
     if(player.score == 0) return; 
     player.score -= 1;
     saveToStorage(players);
-    gameinfoHtml(court, players, player.score);
+    printGameInfo(players);
 
 }   
 
