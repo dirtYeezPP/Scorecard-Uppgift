@@ -1,23 +1,24 @@
 printPlayers(getPlayers());
 
 window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
+document.querySelector('.showTotalsBtn').addEventListener('click', () => { showTotals(getPlayers()) })
 
 // CREATE
 document.querySelector('.addPlayer form')
     .addEventListener('submit', e => {
         e.preventDefault();
 
-        const name = e.target.name.value.trim().replaceAll(/\s+/g, "_"); 
-        const score = [0]; // default score to 0 if not provided 
+        const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
+        const scores = []; // default score to 0 if not provided 
 
         if (!name) return alert("even ghosts have names bro cmon");
-        addPlayer(name, score);
+        addPlayer(name, scores);
     })
 
-function addPlayer(name, score) {
+function addPlayer(name, scores) {
     if (!name) return console.log("even ghosts have names cmon bro");
 
-    const player = { name, score, id: "id_" + Date.now() }
+    const player = { name, scores, id: "id_" + Date.now() }
 
     const players = getPlayers() || [];
 
@@ -49,18 +50,18 @@ function gameInfoHtml(court, players) {
 
     for (let player of players) {
         const playerScoreField = ce('td');
-        const increasePlayerScore = ce('button'); 
+        const increasePlayerScore = ce('button');
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', ()=>{ increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
-        const decreasePlayerScore = ce('button'); 
+        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
+        const decreasePlayerScore = ce('button');
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', ()=>{ decreaseScore(players, player.id, court.id) })  
+        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) })
 
-        playerScoreField.innerText = player.score || 0;
-        
-  
+        playerScoreField.innerText = player.scores[court.id] || 0;
+
+
         playerScoreField.appendChild(increasePlayerScore);
-        playerScoreField.appendChild(decreasePlayerScore); 
+        playerScoreField.appendChild(decreasePlayerScore);
         infoDiv.appendChild(playerScoreField);
     }
 
@@ -104,26 +105,57 @@ async function printGameInfo(players) {
 
 // SCORE CONTROL - NOT SURE WHAT TO DO HERE YET. 
 
-function increaseScore(players, id, courtId){
+function increaseScore(players, id, courtId) {
 
     const player = players.find(p => p.id == id);
 
-    player.score += 1; 
-     
+    if (player.scores[courtId] == undefined) player.scores[courtId] = 0;
+
+    player.scores[courtId] += 1;
+
     saveToStorage(players);
     printGameInfo(players);
-    
+
 }
 
-function decreaseScore(players, id, courtId){
+function decreaseScore(players, id, courtId) {
 
     const player = players.find(p => p.id == id);
-    if(player.score == 0) return; 
-    player.score -= 1;
+
+    if (player.scores[courtId] == undefined) player.scores[courtId] = 0;
+    if (player.scores[courtId] == 0) return;
+
+    player.scores[courtId] -= 1;
     saveToStorage(players);
     printGameInfo(players);
 
-}   
+}
+
+function showTotals(players) {
+
+    const scoreTotal = document.querySelector(".scoreTotal"); 
+    const totalTitle = ce('h3');
+    totalTitle.innerText = "Total Scores";
+
+    scoreTotal.appendChild(totalTitle);
+
+    scoreTotal.replaceChildren();
+
+    for (let player of players){
+        const totalScoreForPlayer = ce('div'); 
+        const name = ce('h4'); 
+        name.innerText = player.name;
+        const totalScore = ce('p');
+        totalScore.innerText = "Total Score for" + player.name + ":" + player.scores.reduce((acc, score)=> acc + score, 0);
+
+        totalScoreForPlayer.appendChild(name);
+        totalScoreForPlayer.appendChild(totalScore);
+        scoreTotal.appendChild(totalScoreForPlayer);
+    }
+
+    
+    return scoreTotal; 
+}
 
 // READ PLAYERS 
 
