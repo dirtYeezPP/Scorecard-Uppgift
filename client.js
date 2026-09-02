@@ -2,6 +2,7 @@ printPlayers(getPlayers());
 
 window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
 document.querySelector('.showTotalsBtn').addEventListener('click', () => { showTotals(getPlayers()) })
+document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame() })
 
 // CREATE
 document.querySelector('.addPlayer form')
@@ -103,6 +104,18 @@ async function printGameInfo(players) {
     }
 }
 
+// RESET GAME / SAVE GAME 
+
+function saveGame() {
+    const currentGameInfo = localStorage.getItem('List');
+    console.log("currentGameInfo: ", currentGameInfo);
+    saveToSavedGames(currentGameInfo);
+}
+
+function loadSavedGame() {
+    const savedGame = localStorage.getItem('SavedGames');
+}
+
 // SCORE CONTROL - NOT SURE WHAT TO DO HERE YET. 
 
 function increaseScore(players, id, courtId) {
@@ -133,28 +146,35 @@ function decreaseScore(players, id, courtId) {
 
 function showTotals(players) {
 
-    const scoreTotal = document.querySelector(".scoreTotal"); 
+    const scoreTotal = document.querySelector(".scoreTotal");
     const totalTitle = ce('h3');
     totalTitle.innerText = "Total Scores";
 
+    scoreTotal.replaceChildren();
     scoreTotal.appendChild(totalTitle);
 
-    scoreTotal.replaceChildren();
-
-    for (let player of players){
-        const totalScoreForPlayer = ce('div'); 
-        const name = ce('h4'); 
+    for (let player of players) {
+        const totalScoreForPlayer = ce('div');
+        const name = ce('h4');
         name.innerText = player.name;
         const totalScore = ce('p');
-        totalScore.innerText = "Total Score for" + player.name + ":" + player.scores.reduce((acc, score)=> acc + score, 0);
+        totalScore.innerText = "Total Score for " + player.name + ": " + player.scores.reduce((acc, score) => acc + score, 0);
 
         totalScoreForPlayer.appendChild(name);
         totalScoreForPlayer.appendChild(totalScore);
         scoreTotal.appendChild(totalScoreForPlayer);
     }
 
-    
-    return scoreTotal; 
+    const totals = players.map(p => ({ name: p.name, total: p.scores.reduce((acc, score) => acc + score, 0) }));
+
+    const winner = totals.reduce((min, p) => p.total < min.total ? p : min); //ternary operator to find the player with the lowest total score 
+    if (winner.total == 0) return;
+
+    const winnerTitle = ce('h3');
+    winnerTitle.innerText = "Winner: " + winner.name + " with a total score of: " + winner.total;
+    scoreTotal.appendChild(winnerTitle);
+
+    return scoreTotal;
 }
 
 // READ PLAYERS 
@@ -225,6 +245,20 @@ async function getGameInfo() {
 function saveToStorage(data) {
     const json = JSON.stringify(data);
     localStorage.setItem('List', json);
+}
+
+function saveToSavedGames(data) {
+    const json = JSON.stringify(data);
+    localStorage.setItem('SavedGames', json);
+
+    
+}
+
+async function getSavedGameInfo() {
+    const jsonCard = await fetch("SavedGames.json");
+    const card = await jsonCard.json();
+    console.log(card);
+    return card;
 }
 
 function getPlayers() {
