@@ -15,7 +15,7 @@ document.querySelector('.addPlayer form')
         if (!name) return alert("even ghosts have names bro cmon");
         addPlayer(name, scores);
     })
-    
+
 
 function addPlayer(name, scores) {
     if (!name) return console.log("even ghosts have names cmon bro");
@@ -26,7 +26,7 @@ function addPlayer(name, scores) {
 
     players.push(player);
     saveToStorage(players);
-    console.log(localStorage);
+    //console.log(localStorage);
     //printPlayers([player]);
     printPlayers(players);
     printGameInfo(players)
@@ -107,7 +107,7 @@ async function printGameInfo(players) {
     }
 }
 
-// RESET GAME / SAVE GAME 
+// RESET GAME / SAVE GAME --> NOT USED REALLY
 
 function saveGame() {
     const currentGameInfo = localStorage.getItem('List');
@@ -254,7 +254,7 @@ function ce(elementType, className = null) {
 async function getGameInfo() {
     const jsonCard = await fetch("info.json");
     const card = await jsonCard.json(); //automatic JsonParse if you will 
-    console.log(card);
+    //console.log(card);
     return card;
 }
 
