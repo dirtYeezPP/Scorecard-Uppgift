@@ -15,6 +15,7 @@ document.querySelector('.addPlayer form')
         if (!name) return alert("even ghosts have names bro cmon");
         addPlayer(name, scores);
     })
+    
 
 function addPlayer(name, scores) {
     if (!name) return console.log("even ghosts have names cmon bro");
@@ -69,6 +70,8 @@ function gameInfoHtml(court, players) {
     return infoDiv;
 }
 
+
+
 async function printGameInfo(players) {
     let gameInfo = await getGameInfo();
 
@@ -116,37 +119,33 @@ function loadSavedGame() {
     const savedGame = localStorage.getItem('SavedGames');
 }
 
-// SCORE CONTROL - NOT SURE WHAT TO DO HERE YET. 
+
+
+// SCORE CONTROL  
 
 function increaseScore(players, id, courtId) {
-
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
-
     player.scores[courtId] += 1;
 
     saveToStorage(players);
     printGameInfo(players);
-
 }
 
 function decreaseScore(players, id, courtId) {
-
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
     if(!player.scores[courtId]) return; // if score is 0 or undefined, do nothing
 
-
     player.scores[courtId] -= 1;
     saveToStorage(players);
     printGameInfo(players);
-
 }
 
-function showTotals(players) {
 
+function showTotals(players) {
     const scoreTotal = document.querySelector(".scoreTotal");
     const totalTitle = ce('h3');
     totalTitle.innerText = "Total Scores";
@@ -193,9 +192,9 @@ function showTotals(players) {
     }
 
     scoreTotal.appendChild(winnerTitle);
-
     return scoreTotal;
 }
+
 
 // READ PLAYERS 
 
@@ -230,9 +229,6 @@ function printPlayers(players) {
     }
 }
 
-// UPDATE SCORES 
-
-
 // DELETE 
 function removePlayer(id) {
     const players = getPlayers();
@@ -263,17 +259,16 @@ async function getGameInfo() {
 }
 
 function saveToStorage(data) {
-    const json = JSON.stringify(data);
+    const json = JSON.stringify(data); // gör om nå till en sträng
     localStorage.setItem('List', json);
 }
 
 function saveToSavedGames(data) {
     const json = JSON.stringify(data);
     localStorage.setItem('SavedGames', json);
-
-    
 }
 
+// this one isnt used yet 
 async function getSavedGameInfo() {
     const jsonCard = await fetch("SavedGames.json");
     const card = await jsonCard.json();
