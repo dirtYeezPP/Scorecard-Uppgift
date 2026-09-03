@@ -122,7 +122,7 @@ function increaseScore(players, id, courtId) {
 
     const player = players.find(p => p.id == id);
 
-    if (player.scores[courtId] == undefined) player.scores[courtId] = 0;
+    if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
 
     player.scores[courtId] += 1;
 
@@ -135,8 +135,9 @@ function decreaseScore(players, id, courtId) {
 
     const player = players.find(p => p.id == id);
 
-    if (player.scores[courtId] == undefined) player.scores[courtId] = 0;
-    if (player.scores[courtId] == 0) return;
+    if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
+    if(!player.scores[courtId]) return; // if score is 0 or undefined, do nothing
+
 
     player.scores[courtId] -= 1;
     saveToStorage(players);
@@ -154,24 +155,43 @@ function showTotals(players) {
     scoreTotal.appendChild(totalTitle);
 
     for (let player of players) {
-        const totalScoreForPlayer = ce('div');
+        const totalScoreForPlayerDiv = ce('div');
         const name = ce('h4');
         name.innerText = player.name;
         const totalScore = ce('p');
-        totalScore.innerText = "Total Score for " + player.name + ": " + player.scores.reduce((acc, score) => acc + score, 0);
+        totalScore.innerText = "Total Score for " + player.name + ": " + player.scores.reduce((acc, score) => acc + (score ?? 0), 0);
 
-        totalScoreForPlayer.appendChild(name);
-        totalScoreForPlayer.appendChild(totalScore);
-        scoreTotal.appendChild(totalScoreForPlayer);
+        totalScoreForPlayerDiv.appendChild(name);
+        totalScoreForPlayerDiv.appendChild(totalScore);
+        scoreTotal.appendChild(totalScoreForPlayerDiv);
     }
 
-    const totals = players.map(p => ({ name: p.name, total: p.scores.reduce((acc, score) => acc + score, 0) }));
+    const totals = players.map(p => ({ name: p.name, total: p.scores.reduce((acc, score) => acc + (score ?? 0), 0) }));
+    // ?? prevents me from getting fucked by undefined or nulled values 
 
-    const winner = totals.reduce((min, p) => p.total < min.total ? p : min); //ternary operator to find the player with the lowest total score 
-    if (winner.total == 0) return;
+    const validPlayers = totals.filter(p => p.total > 0); // filter out players with total score of 0
+    const winner = validPlayers.length > 0 ? validPlayers.reduce((min, p) => p.total < min.total ? p : min) : null; // find the player with the lowest total score among valid players
+    // reduce here compares objects instead of crushing values into one 
 
     const winnerTitle = ce('h3');
-    winnerTitle.innerText = "Winner: " + winner.name + " with a total score of: " + winner.total;
+        if(validPlayers.length === 0) {
+        winnerTitle.innerText = "No one has a score bro NO ONE WINS!";
+        scoreTotal.appendChild(winnerTitle);
+        return scoreTotal;
+    }
+
+    const lowestScore = validPlayers.reduce((min, p) => p.total < min ? p.total : min, validPlayers[0].total); // find the lowest total score among valid players
+    const winners = validPlayers.filter(p=>p.total === lowestScore); // find all players with the lowest total score
+
+    if(winners.length > 1) {
+        const winnerTitle = ce('h3');
+        winnerTitle.innerText = "It's a tie between: " + winners.map(p => p.name).join(", ") + " with each their score being: " + lowestScore;
+        scoreTotal.appendChild(winnerTitle);
+        return scoreTotal;
+    } else {
+        winnerTitle.innerText = "Winner: " + winner.name + " with a total score of: " + winner.total;
+    }
+
     scoreTotal.appendChild(winnerTitle);
 
     return scoreTotal;
