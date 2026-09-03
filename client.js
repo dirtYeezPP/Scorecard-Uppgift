@@ -3,6 +3,8 @@ printPlayers(getPlayers());
 window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
 document.querySelector('.showTotalsBtn').addEventListener('click', () => { showTotals(getPlayers()) })
 document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame() })
+document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
+
 
 // CREATE
 document.querySelector('.addPlayer form')
@@ -115,11 +117,17 @@ function saveGame() {
     saveToSavedGames(currentGameInfo);
 }
 
-function loadSavedGame() {
-    const savedGame = localStorage.getItem('SavedGames');
+function loadSavedGame(nameOfGame) {
+    const savedGame = localStorage.getItem(nameOfGame);
 }
 
+function startNewGame() {
 
+}
+
+function showPreviousGames(){
+
+}
 
 // SCORE CONTROL  
 
@@ -137,7 +145,7 @@ function decreaseScore(players, id, courtId) {
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
-    if(!player.scores[courtId]) return; // if score is 0 or undefined, do nothing
+    if(!player.scores[courtId]) return; // if score is 0 or undefined or null, do nothing
 
     player.scores[courtId] -= 1;
     saveToStorage(players);
@@ -265,7 +273,8 @@ function saveToStorage(data) {
 
 function saveToSavedGames(data) {
     const json = JSON.stringify(data);
-    localStorage.setItem('SavedGames', json);
+    const nameOfGame = prompt("Name your game: ");
+    localStorage.setItem(nameOfGame, json);
 }
 
 // this one isnt used yet 
