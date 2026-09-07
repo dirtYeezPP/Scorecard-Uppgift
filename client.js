@@ -1,7 +1,12 @@
 printPlayers(getPlayers());
 
 window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
-document.querySelector('.showTotalsBtn').addEventListener('click', () => { showTotals(getPlayers()) })
+
+document.querySelector('.showTotalsBtn').addEventListener('click', async () => { 
+    const gameInfo = await getGameInfo(); 
+    showTotals(getPlayers(), gameInfo); 
+});
+
 document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame() })
 document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
 
@@ -43,10 +48,10 @@ function gameInfoHtml(court, players) {
     infoDiv.id = "courtId_" + court.id;
 
     const parNum = ce('td')
-    parNum.innerText = "hål: " + court.par;
+    parNum.innerText = "avg slag: " + court.par;
 
     const courtNum = ce('td')
-    courtNum.innerText = court.id;
+    courtNum.innerText = "Hål:" + court.id;
 
     infoDiv.appendChild(courtNum);
     infoDiv.appendChild(parNum);
@@ -59,7 +64,7 @@ function gameInfoHtml(court, players) {
         increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
         const decreasePlayerScore = ce('button');
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) })
+        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id, court.par) })
 
         playerScoreField.innerText = player.scores[court.id] || 0;
 
@@ -125,7 +130,7 @@ function startNewGame() {
 
 }
 
-function showPreviousGames(){
+function showPreviousGames() {
 
 }
 
@@ -145,7 +150,7 @@ function decreaseScore(players, id, courtId) {
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
-    if(!player.scores[courtId]) return; // if score is 0 or undefined or null, do nothing
+    if (!player.scores[courtId]) return; // if score is 0 or undefined or null, do nothing
 
     player.scores[courtId] -= 1;
     saveToStorage(players);
@@ -153,7 +158,7 @@ function decreaseScore(players, id, courtId) {
 }
 
 
-function showTotals(players) {
+function showTotals(players, gameInfo) {
     const scoreTotal = document.querySelector(".scoreTotal");
     const totalTitle = ce('h3');
     totalTitle.innerText = "Total Scores";
@@ -161,41 +166,74 @@ function showTotals(players) {
     scoreTotal.replaceChildren();
     scoreTotal.appendChild(totalTitle);
 
-    for (let player of players) {
+    const courtArray = gameInfo?.court || [];
+    // Optional chaining operator --> check if thing exists otherwise return undefined. 
+
+    const playerStats = players.map(player => {
+        let playedScoreTotes = 0;
+        let playedParTote = 0;
+        let estimatedScoreToteForPlayer = 0;
+
+        // find total only for what theyve played 
+        courtArray.forEach((hole, index) => {
+            const currentPar = hole?.par ?? 0; 
+            // kollar om ett par finns in the current object from array courtArray 
+            // ?? prevents me from getting fucked by undefined or nulled values 
+            const score = player.scores[index]; 
+
+            if (score && score > 0  && currentPar > 0) {
+                // checks if score exists / is greater than 0, otherwise jump to next hole 
+                // check if currentpar actually has a value greater than +. 
+                playedScoreTotes += score;
+                playedParTote += currentPar;
+            }
+        })
+
+        const overShootAverage = playedParTote > 0 ? (playedScoreTotes / playedParTote) : 1;
+        // Check if holes are played, divide hits by expected par, default of 1 to not make ts thing crash tf out.
+
+        courtArray.forEach((hole, index) => {
+            const currentPar = hole?.par ?? 0;
+            const score = player.scores[index]; 
+
+            if (score && score > 0) {
+                estimatedScoreToteForPlayer += score;
+            } else if (currentPar > 0){
+                // if they missed hole --> multiple par by overshootAverage, vi vill ha ett heltal --> round. 
+                const estimatedScore = Math.round(currentPar * overShootAverage);
+                estimatedScoreToteForPlayer += estimatedScore;
+            }
+        }); return {
+            // were giving a brand new object to replace the old one 
+            name: player.name, 
+            total: estimatedScoreToteForPlayer
+        }
+    }); 
+
+    for (let player of playerStats) {
         const totalScoreForPlayerDiv = ce('div');
         const name = ce('h4');
         name.innerText = player.name;
         const totalScore = ce('p');
-        totalScore.innerText = "Total Score for " + player.name + ": " + player.scores.reduce((acc, score) => acc + (score ?? 0), 0);
+        totalScore.innerText = "Total Score for " + player.name + ": " + player.total; 
 
         totalScoreForPlayerDiv.appendChild(name);
         totalScoreForPlayerDiv.appendChild(totalScore);
         scoreTotal.appendChild(totalScoreForPlayerDiv);
     }
 
-    const totals = players.map(p => ({ name: p.name, total: p.scores.reduce((acc, score) => acc + (score ?? 0), 0) }));
-    // ?? prevents me from getting fucked by undefined or nulled values 
-
-    const validPlayers = totals.filter(p => p.total > 0); // filter out players with total score of 0
-    const winner = validPlayers.length > 0 ? validPlayers.reduce((min, p) => p.total < min.total ? p : min) : null; // find the player with the lowest total score among valid players
-    // reduce here compares objects instead of crushing values into one 
+    const validPlayers = playerStats.filter(p => p.total > 0); 
 
     const winnerTitle = ce('h3');
-        if(validPlayers.length === 0) {
-        winnerTitle.innerText = "No one has a score bro NO ONE WINS!";
-        scoreTotal.appendChild(winnerTitle);
-        return scoreTotal;
-    }
-
     const lowestScore = validPlayers.reduce((min, p) => p.total < min ? p.total : min, validPlayers[0].total); // find the lowest total score among valid players
-    const winners = validPlayers.filter(p=>p.total === lowestScore); // find all players with the lowest total score
+    const winners = validPlayers.filter(p => p.total === lowestScore); // find all players with the lowest total score
 
-    if(winners.length > 1) {
-        const winnerTitle = ce('h3');
+    if (winners.length > 1) {
         winnerTitle.innerText = "It's a tie between: " + winners.map(p => p.name).join(", ") + " with each their score being: " + lowestScore;
         scoreTotal.appendChild(winnerTitle);
         return scoreTotal;
     } else {
+        const winner = winners[0]
         winnerTitle.innerText = "Winner: " + winner.name + " with a total score of: " + winner.total;
     }
 
@@ -274,6 +312,7 @@ function saveToStorage(data) {
 function saveToSavedGames(data) {
     const json = JSON.stringify(data);
     const nameOfGame = prompt("Name your game: ");
+    // vill att denna ska begära ett innehåll, dvs att tomt inte skall sparas. 
     localStorage.setItem(nameOfGame, json);
 }
 
