@@ -1,13 +1,16 @@
 printPlayers(getPlayers());
 
 window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
+//window.addEventListener('load', () =>  { displaySavedGames() })
 
-document.querySelector('.showTotalsBtn').addEventListener('click', async () => { 
-    const gameInfo = await getGameInfo(); 
-    showTotals(getPlayers(), gameInfo); 
+
+
+document.querySelector('.showTotalsBtn').addEventListener('click', async () => {
+    const gameInfo = await getGameInfo();
+    showTotals(getPlayers(), gameInfo);
 });
 
-document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame() })
+document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame(), displaySavedGames() })
 document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
 
 
@@ -41,7 +44,6 @@ function addPlayer(name, scores) {
 
 
 // READ GAME INFO 
-
 function gameInfoHtml(court, players) {
     const infoDiv = ce('tr');
     infoDiv.classList.add('info');
@@ -55,7 +57,6 @@ function gameInfoHtml(court, players) {
 
     infoDiv.appendChild(courtNum);
     infoDiv.appendChild(parNum);
-
 
     for (let player of players) {
         const playerScoreField = ce('td');
@@ -73,17 +74,14 @@ function gameInfoHtml(court, players) {
         playerScoreField.appendChild(decreasePlayerScore);
         infoDiv.appendChild(playerScoreField);
     }
-
     return infoDiv;
 }
 
-
-
+// GAME INFO IN HTML
 async function printGameInfo(players) {
     let gameInfo = await getGameInfo();
 
     const infoBox = document.querySelector(".scoreTableDyn");
-
     infoBox.replaceChildren();
 
     const courtTitleRow = ce('tr');
@@ -108,7 +106,6 @@ async function printGameInfo(players) {
         courtTitleRow.appendChild(playerTitle);
     }
 
-    //infoBox.replaceChildren();
     for (let court of gameInfo.court) {
         table.appendChild(gameInfoHtml(court, players));
     }
@@ -118,12 +115,51 @@ async function printGameInfo(players) {
 
 function saveGame() {
     const currentGameInfo = localStorage.getItem('List');
-    console.log("currentGameInfo: ", currentGameInfo);
-    saveToSavedGames(currentGameInfo);
+    saveGameToLocalStorage(currentGameInfo);
+}
+
+function displaySavedGames() {
+    const savedGamesDiv = document.querySelector(".savedGames");
+    savedGamesDiv.replaceChildren(); 
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+
+        // hämta bara relevanta spel 
+        if (key.startsWith("game_") || key === "List") {
+            const rawData = localStorage.getItem(key);
+
+            // parse json om savedata = objekt , annars string fr 
+            let gameData;
+            try {
+                gameData = JSON.parse(rawData);
+            } catch {
+                gameData = rawData;
+            }
+
+            const singleGameDiv = ce("div");
+            singleGameDiv.classList.add("savedGameItem");
+            const savedGameTitle = ce("h4");
+            savedGameTitle.innerText = typeof gameData === "object" ? (gameData.title || key) : key;
+
+            const loadGameButton = ce("button");
+            loadGameButton.innerText = "load Game";
+            loadGameButton.addEventListener("click", () => {
+                console.log(`loading for ${key}`, gameData)
+                loadSavedGame(savedGameTitle)
+            })
+
+            singleGameDiv.appendChild(savedGameTitle)
+            singleGameDiv.appendChild(loadGameButton)
+            savedGamesDiv.appendChild(singleGameDiv); 
+        }
+    }
+    return savedGamesDiv;
 }
 
 function loadSavedGame(nameOfGame) {
     const savedGame = localStorage.getItem(nameOfGame);
+    console.log(savedGame); 
 }
 
 function startNewGame() {
@@ -131,7 +167,7 @@ function startNewGame() {
 }
 
 function showPreviousGames() {
-
+    const savedGames = localStorage();
 }
 
 // SCORE CONTROL  
@@ -157,17 +193,18 @@ function decreaseScore(players, id, courtId) {
     printGameInfo(players);
 }
 
-
+// SCORE INFORMATION IN HTML
 function showTotals(players, gameInfo) {
     const scoreTotal = document.querySelector(".scoreTotal");
+    if (!scoreTotal) return null;
     const totalTitle = ce('h3');
     totalTitle.innerText = "Total Scores";
 
-    scoreTotal.replaceChildren();
-    scoreTotal.appendChild(totalTitle);
+    scoreTotal.replaceChildren(totalTitle);
+    //scoreTotal.appendChild(totalTitle);
 
     const courtArray = gameInfo?.court || [];
-    // Optional chaining operator --> check if thing exists otherwise return undefined. 
+    // Optional chaining operator --> check if gameInfo exists before finding court otherwise return undefined. 
 
     const playerStats = players.map(player => {
         let playedScoreTotes = 0;
@@ -176,12 +213,12 @@ function showTotals(players, gameInfo) {
 
         // find total only for what theyve played 
         courtArray.forEach((hole, index) => {
-            const currentPar = hole?.par ?? 0; 
+            const currentPar = hole?.par ?? 0;
             // kollar om ett par finns in the current object from array courtArray 
-            // ?? prevents me from getting fucked by undefined or nulled values 
-            const score = player.scores[index]; 
+            // ?? prevents me from getting fucked by undefined or nulled values (nullish coalesc)
+            const score = player.scores?.[index]; //if player lacks score array
 
-            if (score && score > 0  && currentPar > 0) {
+            if (score && score > 0 && currentPar > 0) {
                 // checks if score exists / is greater than 0, otherwise jump to next hole 
                 // check if currentpar actually has a value greater than +. 
                 playedScoreTotes += score;
@@ -194,47 +231,49 @@ function showTotals(players, gameInfo) {
 
         courtArray.forEach((hole, index) => {
             const currentPar = hole?.par ?? 0;
-            const score = player.scores[index]; 
+            const score = player.scores?.[index];
 
             if (score && score > 0) {
                 estimatedScoreToteForPlayer += score;
-            } else if (currentPar > 0){
+            } else if (currentPar > 0) {
                 // if they missed hole --> multiple par by overshootAverage, vi vill ha ett heltal --> round. 
                 const estimatedScore = Math.round(currentPar * overShootAverage);
                 estimatedScoreToteForPlayer += estimatedScore;
             }
         }); return {
             // were giving a brand new object to replace the old one 
-            name: player.name, 
+            name: player.name,
             total: estimatedScoreToteForPlayer
         }
-    }); 
+    });
 
     for (let player of playerStats) {
         const totalScoreForPlayerDiv = ce('div');
         const name = ce('h4');
         name.innerText = player.name;
         const totalScore = ce('p');
-        totalScore.innerText = "Total Score for " + player.name + ": " + player.total; 
+        totalScore.innerText = `Total score for ${player.name} : ${player.total}`;
 
         totalScoreForPlayerDiv.appendChild(name);
         totalScoreForPlayerDiv.appendChild(totalScore);
         scoreTotal.appendChild(totalScoreForPlayerDiv);
     }
 
-    const validPlayers = playerStats.filter(p => p.total > 0); 
-
+    const validPlayers = playerStats.filter(p => p.total > 0);
     const winnerTitle = ce('h3');
-    const lowestScore = validPlayers.reduce((min, p) => p.total < min ? p.total : min, validPlayers[0].total); // find the lowest total score among valid players
-    const winners = validPlayers.filter(p => p.total === lowestScore); // find all players with the lowest total score
 
-    if (winners.length > 1) {
-        winnerTitle.innerText = "It's a tie between: " + winners.map(p => p.name).join(", ") + " with each their score being: " + lowestScore;
-        scoreTotal.appendChild(winnerTitle);
-        return scoreTotal;
+    if (validPlayers.length === 0) {
+        winnerTitle.innerText = "No valid scores are recorded"
     } else {
-        const winner = winners[0]
-        winnerTitle.innerText = "Winner: " + winner.name + " with a total score of: " + winner.total;
+        const lowestScore = Math.min(...validPlayers.map(p => p.total));
+        //const lowestScore = validPlayers.reduce((min, p) => p.total < min ? p.total : min, validPlayers[0].total); // find the lowest total score among valid players
+        const winners = validPlayers.filter(p => p.total === lowestScore); // find all players with the lowest total score
+        if (winners.length > 1) {
+            winnerTitle.innerText = `It's a tie between ${winners.map(p => p.name).join(", ")} with each their score being: ${lowestScore}`;
+        } else {
+            //const winner = winners[0]
+            winnerTitle.innerText = `Winner: ${winners[0].name} with a total score of:  + ${winners[0].total}`;
+        }
     }
 
     scoreTotal.appendChild(winnerTitle);
@@ -309,11 +348,28 @@ function saveToStorage(data) {
     localStorage.setItem('List', json);
 }
 
-function saveToSavedGames(data) {
+function saveGameToLocalStorage(data) {
+    let nameOfGame = null;
+
+    while (true) {
+        const input = prompt("Name your game: ")
+
+        if (input === null) {
+            return;
+        }
+
+        const trimName = input.trim();
+
+        if (trimName.length > 0) {
+            nameOfGame = trimName;
+            break;
+        }
+
+        alert("even ghosts name their games bro cmon");
+    }
+
     const json = JSON.stringify(data);
-    const nameOfGame = prompt("Name your game: ");
-    // vill att denna ska begära ett innehåll, dvs att tomt inte skall sparas. 
-    localStorage.setItem(nameOfGame, json);
+    localStorage.setItem(`game_${nameOfGame}`, json);
 }
 
 // this one isnt used yet 
