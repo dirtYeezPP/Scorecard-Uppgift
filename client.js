@@ -1,4 +1,5 @@
 printPlayers(getPlayers());
+displaySavedGames();
 
 window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
 //window.addEventListener('load', () =>  { displaySavedGames() })
@@ -120,54 +121,68 @@ function saveGame() {
 
 function displaySavedGames() {
     const savedGamesDiv = document.querySelector(".savedGames");
-    savedGamesDiv.replaceChildren(); 
+    savedGamesDiv.replaceChildren();
 
+    // loop through localStorage and find all saved games fr
+    // i = o then it keeps going if its less than the lenght --> ++ is +=1 basically rawr
     for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+        const key = localStorage.key(i); //ts wikll hopefully never be null yes
 
-        // hämta bara relevanta spel 
-        if (key.startsWith("game_") || key === "List") {
-            const rawData = localStorage.getItem(key);
-
-            // parse json om savedata = objekt , annars string fr 
-            let gameData;
-            try {
-                gameData = JSON.parse(rawData);
-            } catch {
-                gameData = rawData;
-            }
-
-            const singleGameDiv = ce("div");
-            singleGameDiv.classList.add("savedGameItem");
-            const savedGameTitle = ce("h4");
-            savedGameTitle.innerText = typeof gameData === "object" ? (gameData.title || key) : key;
-
-            const loadGameButton = ce("button");
-            loadGameButton.innerText = "load Game";
-            loadGameButton.addEventListener("click", () => {
-                console.log(`loading for ${key}`, gameData)
-                loadSavedGame(savedGameTitle)
-            })
-
-            singleGameDiv.appendChild(savedGameTitle)
-            singleGameDiv.appendChild(loadGameButton)
-            savedGamesDiv.appendChild(singleGameDiv); 
+        // filtrera bort orelevanta spel basically 
+        if (!key.startsWith("game_")) {
+            continue;
         }
+        
+        const rawData = localStorage.getItem(key); // get the value of the item in localStorage with the key
+
+        // parse json om savedata = objekt , annars string fr 
+        let gameData;
+        try {
+            gameData = JSON.parse(rawData); // if the data is a valid JSON string w object, parse it into an object
+        } catch {
+            gameData = rawData;
+        }
+
+        const singleGameDiv = ce("div");
+        singleGameDiv.classList.add("savedGameItem");
+        const savedGameTitle = ce("h4");
+        //savedGameTitle.innerText = typeof gameData === "object" ? (gameData[1].name || key) : key;
+        savedGameTitle.innerText = key.replace("game_", "");
+        // array is an object because javascript  
+        // if object --> fetches first object in array (.name gives name yes), if name not defined --> key 
+        // if not object --> key after : 
+   
+        const loadGameButton = ce("button");
+        loadGameButton.innerText = "load Game";
+        loadGameButton.addEventListener("click", () => {
+            //console.log(`loading for ${key}`, gameData)
+            loadSavedGame(gameData)
+        })
+
+        singleGameDiv.appendChild(savedGameTitle)
+        singleGameDiv.appendChild(loadGameButton)
+        savedGamesDiv.appendChild(singleGameDiv);
     }
     return savedGamesDiv;
 }
 
-function loadSavedGame(nameOfGame) {
-    const savedGame = localStorage.getItem(nameOfGame);
-    console.log(savedGame); 
+function loadSavedGame(gameData) {
+    //const savedGame = localStorage.getItem(nameOfGame);
+    console.log(gameData);
+    saveToStorage(gameData);
+    printPlayers(gameData);
+    printGameInfo(gameData);
 }
 
 function startNewGame() {
-
-}
-
-function showPreviousGames() {
-    const savedGames = localStorage();
+    if (!confirm("Are you sure you want to start a new game? This will delete all current players and scores.")) {
+        return;
+    }
+    let players = getPlayers();
+    for(let p of players){
+        p.scores = []; 
+    }                                           
+    loadSavedGame(players);
 }
 
 // SCORE CONTROL  
@@ -206,46 +221,62 @@ function showTotals(players, gameInfo) {
     const courtArray = gameInfo?.court || [];
     // Optional chaining operator --> check if gameInfo exists before finding court otherwise return undefined. 
 
-    const playerStats = players.map(player => {
-        let playedScoreTotes = 0;
-        let playedParTote = 0;
-        let estimatedScoreToteForPlayer = 0;
+    // For every player we build a small object { name, total }.
+    // "total" is the players score for the whole course. Holes they haven't
+    // played yet get an estimated score based on how they did on the holes
+    // they DID play.
+    const playerStats = [];
 
-        // find total only for what theyve played 
-        courtArray.forEach((hole, index) => {
-            const currentPar = hole?.par ?? 0;
-            // kollar om ett par finns in the current object from array courtArray 
-            // ?? prevents me from getting fucked by undefined or nulled values (nullish coalesc)
-            const score = player.scores?.[index]; //if player lacks score array
+    for (let player of players) {
+        // Scores are saved with the hole id as the index (scores[1] = hole 1),
+        // the same way increaseScore/decreaseScore write them.
+        // If a player has no scores array at all, use an empty one.
+        const scores = player.scores || [];
 
-            if (score && score > 0 && currentPar > 0) {
-                // checks if score exists / is greater than 0, otherwise jump to next hole 
-                // check if currentpar actually has a value greater than +. 
-                playedScoreTotes += score;
-                playedParTote += currentPar;
+        // add up the score and the par for the holes that have been played.
+        let playedScore = 0;
+        let playedPar = 0;
+        let playedHoles = 0; 
+
+        for (let hole of courtArray) {
+            const score = scores[hole.id];
+            // alla banor, court1.... 
+
+            // "score > 0" is false for undefined, null and 0, so this
+            // skips every hole without a real score.
+            if (score > 0) {
+                playedScore += score;
+                playedPar += hole.par;
+                playedHoles++; // same as += 1
             }
-        })
-
-        const overShootAverage = playedParTote > 0 ? (playedScoreTotes / playedParTote) : 1;
-        // Check if holes are played, divide hits by expected par, default of 1 to not make ts thing crash tf out.
-
-        courtArray.forEach((hole, index) => {
-            const currentPar = hole?.par ?? 0;
-            const score = player.scores?.[index];
-
-            if (score && score > 0) {
-                estimatedScoreToteForPlayer += score;
-            } else if (currentPar > 0) {
-                // if they missed hole --> multiple par by overshootAverage, vi vill ha ett heltal --> round. 
-                const estimatedScore = Math.round(currentPar * overShootAverage);
-                estimatedScoreToteForPlayer += estimatedScore;
-            }
-        }); return {
-            // were giving a brand new object to replace the old one 
-            name: player.name,
-            total: estimatedScoreToteForPlayer
         }
-    });
+
+        // work out how far over (or under) par the player usually is.
+        // Example: 10 shots on holes worth par 8 in total --> ratio 1.25
+        // If nothing is played yet we just assume they play exactly par (ratio 1).
+        let ratio = 1;
+        if (playedPar > 0) {
+            ratio = playedScore / playedPar;
+        }
+
+        // go through every hole on the course.
+        // Played hole   --> use the real score.
+        // Unplayed hole --> guess: par * ratio, rounded to a whole number.
+        let total = 0;
+
+        for (let hole of courtArray) {
+            const score = scores[hole.id];
+
+            if (score > 0) {
+                total += score;
+            } else {
+                total += Math.round(hole.par * ratio);
+            }
+            
+        } 
+
+        playerStats.push({ name: player.name, total: total, playedHoles: playedHoles });
+    }
 
     for (let player of playerStats) {
         const totalScoreForPlayerDiv = ce('div');
@@ -259,7 +290,7 @@ function showTotals(players, gameInfo) {
         scoreTotal.appendChild(totalScoreForPlayerDiv);
     }
 
-    const validPlayers = playerStats.filter(p => p.total > 0);
+    const validPlayers = playerStats.filter(p => p.playedHoles > 0);
     const winnerTitle = ce('h3');
 
     if (validPlayers.length === 0) {
@@ -368,8 +399,8 @@ function saveGameToLocalStorage(data) {
         alert("even ghosts name their games bro cmon");
     }
 
-    const json = JSON.stringify(data);
-    localStorage.setItem(`game_${nameOfGame}`, json);
+    //const json = JSON.stringify(data);
+    localStorage.setItem(`game_${nameOfGame}`, data);
 }
 
 // this one isnt used yet 
