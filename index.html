@@ -4,23 +4,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>scoreCard</title>
+    <meta name="theme-color" content="#03020a">
+    <meta name="color-scheme" content="dark">
+    <title>scoreCard // ORBITAL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+
+    <!-- Three.js (WebGL) – loaded async so the scorecard never waits on it; cosmos.js falls back to 2D if it is missing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" data-three async></script>
+    <!-- visual layer (new files). Load order matters: hud.js must run before client.js -->
+    <script src="cosmos.js" defer></script>
+    <script src="hud.js" defer></script>
+    <!-- the actual game logic – untouched -->
     <script src="client.js" defer></script>
 </head>
 
 <body>
 
-    <header>
+    <a class="skip-link" href="#scoreboard">Skip to scoreboard</a>
+
+    <!-- boot sequence overlay (decorative, removed by hud.js after ~2 s or on any key) -->
+    <div id="boot" aria-hidden="true">
+        <div class="boot-inner">
+            <div class="boot-title">ORBITAL</div>
+            <div class="boot-sub">scorecard mission control // v9000</div>
+            <div class="boot-log"></div>
+            <div class="boot-bar"><i></i></div>
+            <div class="boot-hint">tap / press any key to skip</div>
+        </div>
+    </div>
+
+    <!-- WebGL universe (cosmos.js) – purely decorative -->
+    <canvas id="cosmos" aria-hidden="true"></canvas>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <div class="brand-text">
+                <span class="brand-title">ORBITAL</span>
+                <span class="brand-sub">scorecard // <span id="courseName" lang="sv">linking…</span></span>
+            </div>
+        </div>
+        <div class="chips" role="group" aria-label="Game status">
+            <span class="chip"><i>crew</i><b id="chipCrew">0</b></span>
+            <span class="chip"><i>holes</i><b id="chipHoles">0/18</b></span>
+            <span class="chip chip-leader"><i>leader</i><b id="chipLeader">—</b></span>
+            <span class="chip"><i>saved</i><b id="chipSaved">0</b></span>
+            <span class="chip"><i>time</i><b id="chipClock">00:00</b></span>
+        </div>
+        <div class="toggles">
+            <button type="button" class="tog" id="togFx" aria-pressed="true" aria-label="Visual effects (FX)">FX</button>
+            <button type="button" class="tog" id="togSfx" aria-pressed="true" aria-label="Sound effects (SFX)">SFX</button>
+        </div>
     </header>
 
     <main>
+        <section class="hero" aria-labelledby="pageTitle">
+            <div class="hero-eyebrow">▮ live mission // fotbollsgolf</div>
+            <h1 id="pageTitle">SCORE<br>CARD</h1>
+            <div class="hero-meta"><span id="courseHoles">18 holes</span><span id="coursePar">par —</span><span>one satellite per player</span></div>
+        </section>
+
         <!-- details -> player can close and open on demand -->
-        <details class="addPlayer">
-            <summary>Player details</summary>
+        <details class="addPlayer hud-panel">
+            <summary><h2>Crew // Players</h2></summary>
             <form action="" method="get">
-                <input type="text" name="name" placeholder="players name">
-                <input type="submit" value="addPlayer">
+                <label class="sr-only" for="playerName">Player name</label>
+                <input type="text" id="playerName" name="name" placeholder="callsign / player name" autocomplete="off" enterkeyhint="done">
+                <input type="submit" value="Deploy player">
             </form>
             <div class="players">
 
@@ -28,20 +81,22 @@
         </details>
         <p class="whisperText">scroll horizontally to see all players</p>
 
-        <div class="scoreTableDyn">
+        <div class="scoreTableDyn hud-panel" id="scoreboard" tabindex="-1">
 
         </div>
 
         <!-- <button class="showTotalsBtn">Show Totals</button> -->
-        <div class="scoreTotal">
+        <div class="scoreTotal hud-panel">
 
         </div>
 
-        <button class="saveGameBtn">Save Game</button>
-        <button class="startNewGameBtn">Start New Game</button>
+        <div class="dock">
+            <button class="saveGameBtn">Save Game</button>
+            <button class="startNewGameBtn">Start New Game</button>
+        </div>
 
-        <details class="savedGamess">
-            <summary>Saved Games</summary>
+        <details class="savedGamess hud-panel">
+            <summary><h2>Archive // Saved Games</h2></summary>
             <div class="savedGames">
 
             </div>
@@ -49,7 +104,7 @@
     </main>
 
     <footer>
-
+        <span>orbital scorecard</span><span aria-hidden="true">·</span><span>webgl by three.js</span><span aria-hidden="true">·</span><span>logic: client.js (untouched)</span>
     </footer>
 
 </body>

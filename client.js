@@ -47,7 +47,7 @@ function gameInfoHtml(court, players) {
     infoDiv.classList.add('info');
     infoDiv.id = "courtId_" + court.id;
 
-    const parNum = ce('td')
+    const parNum = ce('td');
     parNum.innerText = court.par;
 
     const courtNum = ce('td')
