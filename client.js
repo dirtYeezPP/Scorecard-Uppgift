@@ -221,16 +221,12 @@ function showTotals(players, gameInfo) {
     const courtArray = gameInfo?.court || [];
     // Optional chaining operator --> check if gameInfo exists before finding court otherwise return undefined. 
 
-    // For every player we build a small object { name, total }.
-    // "total" is the players score for the whole course. Holes they haven't
-    // played yet get an estimated score based on how they did on the holes
-    // they DID play.
+    // build object for every player {name, total, holes}
+    // total --> player score for whole course, non played holes get an estimated score based on played ones. 
     const playerStats = [];
 
     for (let player of players) {
-        // Scores are saved with the hole id as the index (scores[1] = hole 1),
-        // the same way increaseScore/decreaseScore write them.
-        // If a player has no scores array at all, use an empty one.
+        // scores are saved with hole id as index, if no scores use empty array 
         const scores = player.scores || [];
 
         // add up the score and the par for the holes that have been played.
@@ -242,8 +238,7 @@ function showTotals(players, gameInfo) {
             const score = scores[hole.id];
             // alla banor, court1.... 
 
-            // "score > 0" is false for undefined, null and 0, so this
-            // skips every hole without a real score.
+            // "score > 0" is false for undefined, null and 0, so ts skips every hole without real score
             if (score > 0) {
                 playedScore += score;
                 playedPar += hole.par;
@@ -251,17 +246,15 @@ function showTotals(players, gameInfo) {
             }
         }
 
-        // work out how far over (or under) par the player usually is.
-        // Example: 10 shots on holes worth par 8 in total --> ratio 1.25
-        // If nothing is played yet we just assume they play exactly par (ratio 1).
+
+        // work out how far over/under par player is, if nothing is played we assume they play exactly par --> default 1 
         let ratio = 1;
         if (playedPar > 0) {
             ratio = playedScore / playedPar;
         }
 
-        // go through every hole on the course.
-        // Played hole   --> use the real score.
-        // Unplayed hole --> guess: par * ratio, rounded to a whole number.
+        // go through every hole on the course
+        // Played hole   --> use the real score, unplayed --> par*ratio rounden to whole num 
         let total = 0;
 
         for (let hole of courtArray) {
@@ -290,7 +283,7 @@ function showTotals(players, gameInfo) {
         scoreTotal.appendChild(totalScoreForPlayerDiv);
     }
 
-    const validPlayers = playerStats.filter(p => p.playedHoles > 0);
+    const validPlayers = playerStats.filter(p => p.playedHoles > 0); // check that player has played wow wild crazy 
     const winnerTitle = ce('h3');
 
     if (validPlayers.length === 0) {
