@@ -1,15 +1,14 @@
 printPlayers(getPlayers());
 displaySavedGames();
 
-window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
-//window.addEventListener('load', () =>  { displaySavedGames() })
+//window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
+window.addEventListener('load', async () => { await updateGameViews(getPlayers()) })
 
 
-
-document.querySelector('.showTotalsBtn').addEventListener('click', async () => {
+/* document.querySelector('.showTotalsBtn').addEventListener('click', async () => {
     const gameInfo = await getGameInfo();
     showTotals(getPlayers(), gameInfo);
-});
+}); */
 
 document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame(), displaySavedGames() })
 document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
@@ -28,7 +27,7 @@ document.querySelector('.addPlayer form')
     })
 
 
-function addPlayer(name, scores) {
+async function addPlayer(name, scores) {
     if (!name) return console.log("even ghosts have names cmon bro");
 
     const player = { name, scores, id: "id_" + Date.now() }
@@ -37,10 +36,8 @@ function addPlayer(name, scores) {
 
     players.push(player);
     saveToStorage(players);
-    //console.log(localStorage);
-    //printPlayers([player]);
     printPlayers(players);
-    printGameInfo(players)
+    await updateGameViews(players); 
 }
 
 
@@ -51,10 +48,10 @@ function gameInfoHtml(court, players) {
     infoDiv.id = "courtId_" + court.id;
 
     const parNum = ce('td')
-    parNum.innerText = "avg slag: " + court.par;
+    parNum.innerText = court.par;
 
     const courtNum = ce('td')
-    courtNum.innerText = "Hål:" + court.id;
+    courtNum.innerText = court.id;
 
     infoDiv.appendChild(courtNum);
     infoDiv.appendChild(parNum);
@@ -68,11 +65,13 @@ function gameInfoHtml(court, players) {
         decreasePlayerScore.innerText = '-';
         decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id, court.par) })
 
-        playerScoreField.innerText = player.scores[court.id] || 0;
+        const scoreSpan = ce('span');
+        scoreSpan.innerText = player.scores[court.id] || 0;
+        scoreSpan.style.margin = "0 6px";
 
-
-        playerScoreField.appendChild(increasePlayerScore);
         playerScoreField.appendChild(decreasePlayerScore);
+        playerScoreField.appendChild(scoreSpan);
+        playerScoreField.appendChild(increasePlayerScore);
         infoDiv.appendChild(playerScoreField);
     }
     return infoDiv;
@@ -99,7 +98,6 @@ async function printGameInfo(players) {
     const table = ce('table');
     table.appendChild(courtTitleRow);
     infoBox.appendChild(table);
-
 
     for (let player of players) {
         const playerTitle = ce('th')
@@ -132,7 +130,7 @@ function displaySavedGames() {
         if (!key.startsWith("game_")) {
             continue;
         }
-        
+
         const rawData = localStorage.getItem(key); // get the value of the item in localStorage with the key
 
         // parse json om savedata = objekt , annars string fr 
@@ -151,53 +149,63 @@ function displaySavedGames() {
         // array is an object because javascript  
         // if object --> fetches first object in array (.name gives name yes), if name not defined --> key 
         // if not object --> key after : 
-   
+
         const loadGameButton = ce("button");
         loadGameButton.innerText = "load Game";
         loadGameButton.addEventListener("click", () => {
             //console.log(`loading for ${key}`, gameData)
-            loadSavedGame(gameData)
-        })
+            loadSavedGame(gameData);
+        });
+        const deleteSavedGameButton = ce("button");
+        deleteSavedGameButton.innerText = "delete game";
+        deleteSavedGameButton.addEventListener("click", () => {
+            deleteSavedGame(gameData);
+        });
 
-        singleGameDiv.appendChild(savedGameTitle)
-        singleGameDiv.appendChild(loadGameButton)
+        singleGameDiv.appendChild(savedGameTitle);
+        singleGameDiv.appendChild(loadGameButton);
+        singleGameDiv.appendChild(deleteSavedGameButton);
         savedGamesDiv.appendChild(singleGameDiv);
     }
     return savedGamesDiv;
 }
 
-function loadSavedGame(gameData) {
+async function loadSavedGame(gameData) {
     //const savedGame = localStorage.getItem(nameOfGame);
     console.log(gameData);
     saveToStorage(gameData);
     printPlayers(gameData);
-    printGameInfo(gameData);
+    await updateGameViews(gameData)
+}
+
+function deleteSavedGame(gameData) {
+    console.log(gameData);
 }
 
 function startNewGame() {
-    if (!confirm("Are you sure you want to start a new game? This will delete all current players and scores.")) {
+    if (!confirm("Are you sure you want to start a new game?")) {
         return;
     }
     let players = getPlayers();
-    for(let p of players){
-        p.scores = []; 
-    }                                           
+    for (let p of players) {
+        p.scores = [];
+    }
     loadSavedGame(players);
 }
 
 // SCORE CONTROL  
 
-function increaseScore(players, id, courtId) {
+async function increaseScore(players, id, courtId) {
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
     player.scores[courtId] += 1;
 
     saveToStorage(players);
-    printGameInfo(players);
+    await updateGameViews(players);
 }
 
-function decreaseScore(players, id, courtId) {
+async function decreaseScore(players, id, courtId) {
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
@@ -205,7 +213,7 @@ function decreaseScore(players, id, courtId) {
 
     player.scores[courtId] -= 1;
     saveToStorage(players);
-    printGameInfo(players);
+    await updateGameViews(players);
 }
 
 // SCORE INFORMATION IN HTML
@@ -232,7 +240,7 @@ function showTotals(players, gameInfo) {
         // add up the score and the par for the holes that have been played.
         let playedScore = 0;
         let playedPar = 0;
-        let playedHoles = 0; 
+        let playedHoles = 0;
 
         for (let hole of courtArray) {
             const score = scores[hole.id];
@@ -265,8 +273,8 @@ function showTotals(players, gameInfo) {
             } else {
                 total += Math.round(hole.par * ratio);
             }
-            
-        } 
+
+        }
 
         playerStats.push({ name: player.name, total: total, playedHoles: playedHoles });
     }
@@ -339,14 +347,13 @@ function printPlayers(players) {
 }
 
 // DELETE 
-function removePlayer(id) {
+async function removePlayer(id) {
     const players = getPlayers();
     const newPlayerList = players.filter(p => p.id != id);
     if (players.length == newPlayerList.length) console.log("no player removed");
     saveToStorage(newPlayerList);
-    //document.getElementById(id).remove();
     printPlayers(newPlayerList);
-    printGameInfo(newPlayerList);
+    await updateGameViews(newPlayerList);
 }
 
 // HELPER FUNCTIONS 
@@ -402,6 +409,13 @@ async function getSavedGameInfo() {
     const card = await jsonCard.json();
     console.log(card);
     return card;
+}
+
+// update totals stuff 
+async function updateGameViews(players) {
+    const gameInfo = await getGameInfo();
+    printGameInfo(players);
+    showTotals(players, gameInfo);
 }
 
 function getPlayers() {

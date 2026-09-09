@@ -15,37 +15,37 @@
     </header>
 
     <main>
-        <div class="savedGames">
+        <!-- details -> player can close and open on demand -->
+        <details class="addPlayer">
+            <summary>Player details</summary>
+            <form action="" method="get">
+                <input type="text" name="name" placeholder="players name">
+                <input type="submit" value="addPlayer">
+            </form>
+            <div class="players">
 
-        </div>
+            </div>
+        </details>
+        <p class="whisperText">scroll horizontally to see all players</p>
 
         <div class="scoreTableDyn">
-            
+
         </div>
 
-        <button class="showTotalsBtn">Show Totals</button>
-
-
+        <!-- <button class="showTotalsBtn">Show Totals</button> -->
         <div class="scoreTotal">
 
         </div>
 
         <button class="saveGameBtn">Save Game</button>
-
-        <div class="playerSection">
-            <div class="players">
-
-            </div>
-
-            <div class="addPlayer">
-                <form action="" method="get">
-                    <input type="text" name="name" placeholder="players name">
-                    <input type="submit" value="addPlayer">
-                </form>
-            </div>
-        </div>
-
         <button class="startNewGameBtn">Start New Game</button>
+
+        <details class="savedGamess">
+            <summary>Saved Games</summary>
+            <div class="savedGames">
+
+            </div>
+        </details>
     </main>
 
     <footer>

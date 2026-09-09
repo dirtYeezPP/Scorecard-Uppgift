@@ -14,3 +14,72 @@
     // Example: 10 shots on holes worth par 8 in total --> ratio 1.25
     // If nothing is played yet we just assume they play exactly par (ratio 1).
 ``` 
+
+``` js
+// Helper to update both the score card and the live totals together
+async function updateGameViews(players) {
+    const gameInfo = await getGameInfo();
+    printGameInfo(players);
+    showTotals(players, gameInfo);
+}
+
+window.addEventListener('load', async () => { 
+    await updateGameViews(getPlayers());
+});
+
+async function increaseScore(players, id, courtId) {
+    const player = players.find(p => p.id == id);
+
+    if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
+    player.scores[courtId] += 1;
+
+    saveToStorage(players);
+    await updateGameViews(players); // Updates totals live
+}
+
+async function decreaseScore(players, id, courtId) {
+    const player = players.find(p => p.id == id);
+
+    if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
+    if (!player.scores[courtId]) return;
+
+    player.scores[courtId] -= 1;
+    saveToStorage(players);
+    await updateGameViews(players); // Updates totals live
+}
+
+async function addPlayer(name, scores) {
+    if (!name) return console.log("even ghosts have names cmon bro");
+
+    const player = { name, scores, id: "id_" + Date.now() };
+    const players = getPlayers() || [];
+
+    players.push(player);
+    saveToStorage(players);
+    printPlayers(players);
+    await updateGameViews(players); // Updates totals live
+}
+
+async function removePlayer(id) {
+    const players = getPlayers();
+    const newPlayerList = players.filter(p => p.id != id);
+    if (players.length == newPlayerList.length) console.log("no player removed");
+    saveToStorage(newPlayerList);
+    printPlayers(newPlayerList);
+    await updateGameViews(newPlayerList); // Updates totals live
+}
+
+async function loadSavedGame(gameData) {
+    saveToStorage(gameData);
+    printPlayers(gameData);
+    await updateGameViews(gameData); // Updates totals live
+}
+
+// DELETE OR COMMENT OUT THIS LISTENER
+/*
+document.querySelector('.showTotalsBtn').addEventListener('click', async () => {
+    const gameInfo = await getGameInfo();
+    showTotals(getPlayers(), gameInfo);
+});
+*/
+```
