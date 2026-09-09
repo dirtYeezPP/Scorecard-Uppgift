@@ -37,7 +37,7 @@ async function addPlayer(name, scores) {
     players.push(player);
     saveToStorage(players);
     printPlayers(players);
-    await updateGameViews(players); 
+    await updateGameViews(players);
 }
 
 
@@ -90,7 +90,7 @@ async function printGameInfo(players) {
     parTitle.innerText = "par"
 
     const courtTitle = ce('th');
-    courtTitle.innerText = "court";
+    courtTitle.innerText = "Hål";
 
     courtTitleRow.appendChild(courtTitle);
     courtTitleRow.appendChild(parTitle)
@@ -241,6 +241,7 @@ function showTotals(players, gameInfo) {
         let playedScore = 0;
         let playedPar = 0;
         let playedHoles = 0;
+        // maybe implement a set here idk it seemed cool 
 
         for (let hole of courtArray) {
             const score = scores[hole.id];
