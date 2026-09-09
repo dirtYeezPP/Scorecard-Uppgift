@@ -47,7 +47,7 @@ There are also a lot of empty box-elements included, which take care of data tak
 ### 1.2 JAVASCRIPT HTML FUNCTIONS
 A lot of whats visible within the page is created with javascript (*see 3.2 CREATE ELEMENT* or *1.2a OUTPUTTING PLAYERS*).
 #### 1.2a OUTPUTTING PLAYERS 
-``` js 
+``` js
 function playerInHtml(player) {
     const div = ce('div');
     div.classList.add('player');
@@ -65,6 +65,12 @@ function playerInHtml(player) {
     return div;
 }
 ``` 
+The function initially retrieved *players* in order to know what to work with. <br>
+All elements are then created via ce (*create element, see 3.2 for further explanation*). The contents of created elements consists of information from retrieved *players* attribute. 
+In order to remove players *rmButton* is used via *removePlayer* function which sends the *player.id* in order to know exactly which played is wanted to be removed. <br>
+In order to display the created information everything is first inserted into the main box, and then returned. 
+
+<hr>
 
 ``` js
 function printPlayers(players) {
@@ -75,6 +81,13 @@ function printPlayers(players) {
     }
 }
 ```
+The function *printPlayers* is responsible for outputting each player in the array of *players*. <br>
+The contents of both functions will be placed in the empty div with the class "players" from the HTML file. 
+Everything on the page is replaced before new information is to be put out, to ensure that the page is updating live and does not contain a plethora of the same information 200x on the page. 
+Everything from the returned div in *playerInHtml* is then inserted into the picked out box, as to display it all on the page. 
+
+<hr>
+
 #### 1.2b OUTPUTTING GAME INFO 
 ``` js 
 function gameInfoHtml(court, players) {
@@ -95,7 +108,7 @@ function gameInfoHtml(court, players) {
         const playerScoreField = ce('td');
         const increasePlayerScore = ce('button');
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
+        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id) }) 
         const decreasePlayerScore = ce('button');
         decreasePlayerScore.innerText = '-';
         decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id, court.par) })
@@ -112,6 +125,8 @@ function gameInfoHtml(court, players) {
     return infoDiv;
 }
 ``` 
+
+<hr>
 
 ``` js
 async function printGameInfo(players) {
@@ -146,32 +161,30 @@ async function printGameInfo(players) {
     }
 }
 ```
+
+<hr>
+
 #### 1.2c OUTPUTTING SCORES 
 ``` js 
 
 ``` 
 #### 1.2d OUTPUTTING SAVED GAMES 
-``` js 
+```` js 
 function displaySavedGames() {
     const savedGamesDiv = document.querySelector(".savedGames");
     savedGamesDiv.replaceChildren();
 
-    // loop through localStorage and find all saved games fr
-    // i = o then it keeps going if its less than the lenght --> ++ is +=1 basically rawr
     for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i); //ts wikll hopefully never be null yes
-
-        // filtrera bort orelevanta spel basically 
+        const key = localStorage.key(i); 
+     
         if (!key.startsWith("game_")) {
             continue;
         }
 
-        const rawData = localStorage.getItem(key); // get the value of the item in localStorage with the key
-
-        // parse json om savedata = objekt , annars string fr 
+        const rawData = localStorage.getItem(key);  
         let gameData;
         try {
-            gameData = JSON.parse(rawData); // if the data is a valid JSON string w object, parse it into an object
+            gameData = JSON.parse(rawData); 
         } catch {
             gameData = rawData;
         }
@@ -179,16 +192,11 @@ function displaySavedGames() {
         const singleGameDiv = ce("div");
         singleGameDiv.classList.add("savedGameItem");
         const savedGameTitle = ce("h4");
-        //savedGameTitle.innerText = typeof gameData === "object" ? (gameData[1].name || key) : key;
         savedGameTitle.innerText = key.replace("game_", "");
-        // array is an object because javascript  
-        // if object --> fetches first object in array (.name gives name yes), if name not defined --> key 
-        // if not object --> key after : 
 
         const loadGameButton = ce("button");
         loadGameButton.innerText = "load Game";
         loadGameButton.addEventListener("click", () => {
-            //console.log(`loading for ${key}`, gameData)
             loadSavedGame(gameData);
         });
         const deleteSavedGameButton = ce("button");
@@ -204,7 +212,10 @@ function displaySavedGames() {
     }
     return savedGamesDiv;
 }
-``` 
+```` 
+
+<hr>
+
 ## 2 JAVASCRIPT
 ### 2.1 PLAYERS 
 #### ADD A PLAYER
@@ -255,6 +266,13 @@ async function removePlayer(id) {
     await updateGameViews(newPlayerList);
 }
 ```
+The function retrieved the id of chosen player from the (*see 1.2a OUTPUTTING PLAYERS*) *playerInHtml* function. <br>
+The first step includes fetching the list containing all players.
+The chosen player is then found and filterd off through *filter*, the list without the player is called *newPlayerList*. 
+In order to make sure a player actually has been removed an if block checks the lengths of both lists to compare, if there are no differences no player has been deleted. <br>
+The new player list is then saved into local storage, which updates the current game information sitting in 'List'. It is also sent in to *printPlayers* to print out the updated information. Lastly the new list is passed on to *updateGameViews* so that the score system is on par with the changes. 
+
+<hr>
 
 ### 2.2 PLAYER SCORE CONTROLS 
 #### 2.2a INCREASE PLAYER SCORE 
@@ -362,6 +380,7 @@ function showTotals(players, gameInfo) {
 }
 ``` 
 
+<hr>
 
 ### 2.3 GAME CONTROLS 
 #### 2.3a SAVE GAME FUNCTION
