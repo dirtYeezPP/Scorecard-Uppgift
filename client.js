@@ -1,14 +1,7 @@
 printPlayers(getPlayers());
 displaySavedGames();
 
-//window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
 window.addEventListener('load', async () => { await updateGameViews(getPlayers()) })
-
-
-/* document.querySelector('.showTotalsBtn').addEventListener('click', async () => {
-    const gameInfo = await getGameInfo();
-    showTotals(getPlayers(), gameInfo);
-}); */
 
 document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame(), displaySavedGames() })
 document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
@@ -20,24 +13,35 @@ document.querySelector('.addPlayer form')
         e.preventDefault();
 
         const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
+        //regular expression --> / = define a regex literal, then /s is space, + is at least once, g = global search (regex cheat sheet)
+        //global search ensures that the regular expression finds all matches in the input string rather than stopping after 1st one. (w3schools)
+
         const scores = []; // default score to 0 if not provided 
 
         if (!name) return alert("even ghosts have names bro cmon");
         addPlayer(name, scores);
+        e.target.name.value = ""; 
     })
 
-
+let tinkingAbtAdding = false;
 async function addPlayer(name, scores) {
     if (!name) return console.log("even ghosts have names cmon bro");
+    if (tinkingAbtAdding) return;
+    tinkingAbtAdding = true;
 
-    const player = { name, scores, id: "id_" + Date.now() }
+    try {
+        const player = { name, scores, id: "id_" + Date.now() + Math.random().toString(36).substring(2, 9) }
+        const players = getPlayers() || [];
+        players.push(player);
+        saveToStorage(players);
+        printPlayers(players);
+        await updateGameViews(players);
+    } finally {
+        setTimeout(()=>{
+            tinkingAbtAdding = false; 
+        }, 100); 
+    }
 
-    const players = getPlayers() || [];
-
-    players.push(player);
-    saveToStorage(players);
-    printPlayers(players);
-    await updateGameViews(players);
 }
 
 
@@ -47,7 +51,7 @@ function gameInfoHtml(court, players) {
     infoDiv.classList.add('info');
     infoDiv.id = "courtId_" + court.id;
 
-    const parNum = ce('td');
+    const parNum = ce('td')
     parNum.innerText = court.par;
 
     const courtNum = ce('td')
@@ -60,10 +64,12 @@ function gameInfoHtml(court, players) {
         const playerScoreField = ce('td');
         const increasePlayerScore = ce('button');
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
+        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id); }, { once: true });
+        // button only fires once per render, otherwise it can go from 1 --> 3 
+
         const decreasePlayerScore = ce('button');
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id, court.par) })
+        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) }, { once: true });
 
         const scoreSpan = ce('span');
         scoreSpan.innerText = player.scores[court.id] || 0;
@@ -110,7 +116,8 @@ async function printGameInfo(players) {
     }
 }
 
-// RESET GAME / SAVE GAME --> NOT USED REALLY
+
+// RESET GAME / SAVE GAME 
 
 function saveGame() {
     const currentGameInfo = localStorage.getItem('List');
@@ -122,9 +129,9 @@ function displaySavedGames() {
     savedGamesDiv.replaceChildren();
 
     // loop through localStorage and find all saved games fr
-    // i = o then it keeps going if its less than the lenght --> ++ is +=1 basically rawr
+    // i = 0 then it keeps going if its less than the length --> increment by 1 each time
     for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i); //ts wikll hopefully never be null yes
+        const key = localStorage.key(i); //ts will hopefully never be null yes
 
         // filtrera bort orelevanta spel basically 
         if (!key.startsWith("game_")) {
@@ -159,7 +166,7 @@ function displaySavedGames() {
         const deleteSavedGameButton = ce("button");
         deleteSavedGameButton.innerText = "delete game";
         deleteSavedGameButton.addEventListener("click", () => {
-            deleteSavedGame(gameData);
+            deleteSavedGame(key);
         });
 
         singleGameDiv.appendChild(savedGameTitle);
@@ -178,8 +185,10 @@ async function loadSavedGame(gameData) {
     await updateGameViews(gameData)
 }
 
-function deleteSavedGame(gameData) {
-    console.log(gameData);
+function deleteSavedGame(key) {
+    localStorage.removeItem(key);
+    displaySavedGames();
+    //console.log(key)
 }
 
 function startNewGame() {
@@ -196,9 +205,11 @@ function startNewGame() {
 // SCORE CONTROL  
 
 async function increaseScore(players, id, courtId) {
+    //console.log("increaseScore trigger at ", courtId);
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
+    //console.log(player.scores[courtId])
     player.scores[courtId] += 1;
 
     saveToStorage(players);
@@ -209,7 +220,7 @@ async function decreaseScore(players, id, courtId) {
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
-    if (!player.scores[courtId]) return; // if score is 0 or undefined or null, do nothing
+    if (!player.scores[courtId]) return; // if score is 0 or undefined or null, do nothing --> no neg scores
 
     player.scores[courtId] -= 1;
     saveToStorage(players);
@@ -348,13 +359,24 @@ function printPlayers(players) {
 }
 
 // DELETE 
+let tinkingAbtDelete = false;
+
 async function removePlayer(id) {
-    const players = getPlayers();
-    const newPlayerList = players.filter(p => p.id != id);
-    if (players.length == newPlayerList.length) console.log("no player removed");
-    saveToStorage(newPlayerList);
-    printPlayers(newPlayerList);
-    await updateGameViews(newPlayerList);
+    if (tinkingAbtDelete) return;
+    tinkingAbtDelete = true;
+
+    try {
+        const players = getPlayers();
+        const newPlayerList = players.filter(p => p.id != id);
+        if (players.length == newPlayerList.length) console.log("no player removed");
+        saveToStorage(newPlayerList)
+        printPlayers(newPlayerList)
+        await updateGameViews(newPlayerList)
+    } finally { //körs alltid 
+        setTimeout(() => {
+            tinkingAbtDelete = false;
+        }, 100)
+    }
 }
 
 // HELPER FUNCTIONS 
@@ -370,7 +392,7 @@ function ce(elementType, className = null) {
 // GET SCORE CARD ROUNDS FROM JSON FILE 
 async function getGameInfo() {
     const jsonCard = await fetch("info.json");
-    const card = await jsonCard.json(); //automatic JsonParse if you will 
+    const card = await jsonCard.json(); //automatic JsonParse if you will --> convert text to object / arr
     //console.log(card);
     return card;
 }
@@ -404,18 +426,10 @@ function saveGameToLocalStorage(data) {
     localStorage.setItem(`game_${nameOfGame}`, data);
 }
 
-// this one isnt used yet 
-async function getSavedGameInfo() {
-    const jsonCard = await fetch("SavedGames.json");
-    const card = await jsonCard.json();
-    console.log(card);
-    return card;
-}
-
 // update totals stuff 
 async function updateGameViews(players) {
     const gameInfo = await getGameInfo();
-    printGameInfo(players);
+    await printGameInfo(players);
     showTotals(players, gameInfo);
 }
 
