@@ -1,14 +1,7 @@
 printPlayers(getPlayers());
 displaySavedGames();
 
-//window.addEventListener('load', async () => { await printGameInfo(getPlayers()) })
 window.addEventListener('load', async () => { await updateGameViews(getPlayers()) })
-
-
-/* document.querySelector('.showTotalsBtn').addEventListener('click', async () => {
-    const gameInfo = await getGameInfo();
-    showTotals(getPlayers(), gameInfo);
-}); */
 
 document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGame(), displaySavedGames() })
 document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
@@ -22,6 +15,9 @@ document.querySelector('.addPlayer form')
         e.preventDefault();
 
         const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
+        //regular expression --> / = define a regex literal, then /s is space, + is at least once, g = global search (regex cheat sheet)
+        //global search ensures that the regular expression finds all matches in the input string rather than stopping after 1st one. (w3schools)
+        
         const scores = []; // default score to 0 if not provided 
 
         if (!name) return alert("even ghosts have names bro cmon");

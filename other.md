@@ -119,3 +119,14 @@ då kan vi också ta sorted.pop( ) ta ut den sista och få det största värdet 
     return card;
 } */ 
 ```
+
+``` js
+/* document.querySelector('.showTotalsBtn').addEventListener('click', async () => {
+    const gameInfo = await getGameInfo();
+    showTotals(getPlayers(), gameInfo);
+}); */ 
+```
+
+``` js
+//window.addEventListener('load', async () => { await printGameInfo(getPlayers()) }) 
+``` 
