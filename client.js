@@ -7,8 +7,6 @@ document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGam
 document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
 
 
-
-
 // CREATE
 document.querySelector('.addPlayer form')
     .addEventListener('submit', e => {
