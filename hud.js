@@ -350,25 +350,31 @@
     return m;
   }
 
+  /* client.js' showTotals() renders one "Total score for NAME : N" <p> per
+     player, in players[] order. We read them BY POSITION, never by name, so
+     two players who share a name keep their own totals. */
   function parseTotals() {
     const box = $('.scoreTotal');
-    const totals = new Map(), leaders = new Set();
-    let tie = false, none = false;
-    if (!box) return { totals, leaders, tie, none };
-    $$('p', box).forEach(p => { const m = p.textContent.match(/^Total score for (.+?) : (-?\d+)/); if (m) totals.set(m[1], +m[2]); });
-    $$('h3', box).forEach(h => {
-      const t = h.textContent.trim(); let m;
-      if ((m = t.match(/^Winner:\s*(.+?)\s+with a total score/))) leaders.add(m[1]);
-      else if ((m = t.match(/^It's a tie between (.+?) with each/))) { m[1].split(', ').forEach(n => leaders.add(n)); tie = true; }
-      else if (/^No valid scores/.test(t)) none = true;
-    });
-    return { totals, leaders, tie, none };
+    const list = [];
+    if (!box) return { list };
+    $$('p', box).forEach(p => { const m = p.textContent.match(/^Total score for .+ : (-?\d+)\s*$/); if (m) list.push(+m[1]); });
+    return { list };
+  }
+
+  /* same rule as client.js: only players with at least one played hole count;
+     lowest total wins; several with that total = tie */
+  function leadersOf(rows, haveTotals) {
+    const valid = rows.filter(r => !r.dim && Number.isFinite(r.total));
+    if (!haveTotals || !valid.length) return { ids: new Set(), tie: false, none: !rows.some(r => !r.dim) };
+    const min = Math.min(...valid.map(r => r.total));
+    const winners = valid.filter(r => r.total === min);
+    return { ids: new Set(winners.map(r => r.p.id)), tie: winners.length > 1, none: false };
   }
 
   function playedCount(p) { let n = 0; for (const h of holes) if (((p.scores || [])[h.id] || 0) > 0) n++; return n; }
 
-  function rankPlayers(players, totals) {
-    const rows = players.map((p, i) => ({ p, i, played: playedCount(p), total: totals.totals.has(p.name) ? totals.totals.get(p.name) : Infinity }));
+  function rankPlayers(players, list) {
+    const rows = players.map((p, i) => ({ p, i, played: playedCount(p), total: Number.isFinite(list[i]) ? list[i] : Infinity }));
     const valid = rows.filter(r => r.played > 0).sort((a, b) => a.total - b.total || a.i - b.i);
     let rank = 0, last = null;
     valid.forEach((r, idx) => { if (last !== null && r.total !== last) rank = idx; r.rank = rank; last = r.total; });
@@ -411,9 +417,11 @@
     }
     prevSnap = snap;
 
-    const totals = parseTotals();
-    const ranked = rankPlayers(players, totals);
-    const leaderIds = new Set(ranked.filter(r => totals.leaders.has(r.p.name) && !r.dim).map(r => r.p.id));
+    const parsed = parseTotals();
+    const ranked = rankPlayers(players, parsed.list);
+    const lead = leadersOf(ranked, parsed.list.length === players.length);
+    const leaderIds = lead.ids;
+    const totals = { list: parsed.list, tie: lead.tie, none: lead.none };
 
     if (window.COSMOS) {
       COSMOS.setPlayers(ranked.map(r => ({
@@ -458,7 +466,7 @@
       const h = holes.find(x => x.id === e.hole);
       const p = players.find(x => x.id === e.id);
       if (h && p) {
-        const total = totals.totals.get(p.name);
+        const total = totals.list[players.indexOf(p)];
         announce(`${displayName(p.name)}, hole ${e.hole}: ${plural(e.to, 'stroke')}, ${deltaWords(e.to, h.par)}.${total != null ? ` Total ${total}.` : ''}`);
         if (e.to > 0 && e.to < h.par) toast(`Under par — ${displayName(p.name)} on hole ${pad2(e.hole)}`, 'ok');
       }
@@ -568,19 +576,19 @@
     if (h3s[0]) { h3s[0].classList.add('totals-title'); }
     if (h3s.length > 1) { const v = h3s[h3s.length - 1]; v.classList.add('verdict'); v.classList.toggle('verdict-none', totals.none); v.classList.toggle('verdict-tie', totals.tie); }
     const cards = kids.filter(k => k.tagName === 'DIV');
-    const byName = new Map(players.map(p => [p.name, p]));
-    const vals = ranked.filter(r => !r.dim).map(r => r.total);
+    const vals = ranked.filter(r => !r.dim && Number.isFinite(r.total)).map(r => r.total);
     const min = vals.length ? Math.min(...vals) : 0, max = vals.length ? Math.max(...vals) : 0;
     cards.forEach((card, i) => {
-      const h4 = card.querySelector('h4'); const p = h4 ? byName.get(h4.textContent) : players[i];
+      // client.js appends one card per player in players[] order → match by position, not by name
+      const p = players[i];
       if (!p) return;
-      const r = ranked.find(x => x.p.id === p.id);
+      const r = ranked[i];
       card.classList.add('total-card');
       card.style.setProperty('--pc', colorFor(p.id));
       card.dataset.rank = r ? r.rank + 1 : '';
       card.classList.toggle('is-leader', leaderIds.has(p.id));
       card.classList.toggle('is-dim', !!(r && r.dim));
-      const total = totals.totals.get(p.name);
+      const total = totals.list[i];
       $$('.total-big, .total-bar, .total-played', card).forEach(e => e.remove());   // idempotent re-decoration
       const big = make('div', 'total-big');
       const rankEl = make('span', 'total-rank');
