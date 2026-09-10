@@ -17,25 +17,33 @@ document.querySelector('.addPlayer form')
         const name = e.target.name.value.trim().replaceAll(/\s+/g, "_");
         //regular expression --> / = define a regex literal, then /s is space, + is at least once, g = global search (regex cheat sheet)
         //global search ensures that the regular expression finds all matches in the input string rather than stopping after 1st one. (w3schools)
-        
+
         const scores = []; // default score to 0 if not provided 
 
         if (!name) return alert("even ghosts have names bro cmon");
         addPlayer(name, scores);
+        e.target.name.value = ""; 
     })
 
-
+let tinkingAbtAdding = false;
 async function addPlayer(name, scores) {
     if (!name) return console.log("even ghosts have names cmon bro");
+    if (tinkingAbtAdding) return;
+    tinkingAbtAdding = true;
 
-    const player = { name, scores, id: "id_" + Date.now() }
+    try {
+        const player = { name, scores, id: "id_" + Date.now() + Math.random().toString(36).substring(2, 9) }
+        const players = getPlayers() || [];
+        players.push(player);
+        saveToStorage(players);
+        printPlayers(players);
+        await updateGameViews(players);
+    } finally {
+        setTimeout(()=>{
+            tinkingAbtAdding = false; 
+        }, 100); 
+    }
 
-    const players = getPlayers() || [];
-
-    players.push(player);
-    saveToStorage(players);
-    printPlayers(players);
-    await updateGameViews(players);
 }
 
 
@@ -58,12 +66,12 @@ function gameInfoHtml(court, players) {
         const playerScoreField = ce('td');
         const increasePlayerScore = ce('button');
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id); }, { once: true }); 
+        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id); }, { once: true });
         // button only fires once per render, otherwise it can go from 1 --> 3 
 
         const decreasePlayerScore = ce('button');
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) }, {once: true});
+        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) }, { once: true });
 
         const scoreSpan = ce('span');
         scoreSpan.innerText = player.scores[court.id] || 0;
@@ -351,13 +359,24 @@ function printPlayers(players) {
 }
 
 // DELETE 
+let tinkingAbtDelete = false;
+
 async function removePlayer(id) {
-    const players = getPlayers();
-    const newPlayerList = players.filter(p => p.id != id);
-    if (players.length == newPlayerList.length) console.log("no player removed");
-    saveToStorage(newPlayerList);
-    printPlayers(newPlayerList);
-    await updateGameViews(newPlayerList);
+    if (tinkingAbtDelete) return;
+    tinkingAbtDelete = true;
+
+    try {
+        const players = getPlayers();
+        const newPlayerList = players.filter(p => p.id != id);
+        if (players.length == newPlayerList.length) console.log("no player removed");
+        saveToStorage(newPlayerList)
+        printPlayers(newPlayerList)
+        await updateGameViews(newPlayerList)
+    } finally { //körs alltid 
+        setTimeout(() => {
+            tinkingAbtDelete = false;
+        }, 100)
+    }
 }
 
 // HELPER FUNCTIONS 
