@@ -168,7 +168,7 @@ function displaySavedGames() {
         const deleteSavedGameButton = ce("button");
         deleteSavedGameButton.innerText = "delete game";
         deleteSavedGameButton.addEventListener("click", () => {
-            deleteSavedGame(gameData);
+            deleteSavedGame(key);
         });
 
         singleGameDiv.appendChild(savedGameTitle);
@@ -187,8 +187,10 @@ async function loadSavedGame(gameData) {
     await updateGameViews(gameData)
 }
 
-function deleteSavedGame(gameData) {
-    console.log(gameData);
+function deleteSavedGame(key) {
+    localStorage.removeItem(key);
+    displaySavedGames();
+    //console.log(key)
 }
 
 function startNewGame() {

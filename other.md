@@ -130,3 +130,5 @@ då kan vi också ta sorted.pop( ) ta ut den sista och få det största värdet 
 ``` js
 //window.addEventListener('load', async () => { await printGameInfo(getPlayers()) }) 
 ``` 
+
+
