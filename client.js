@@ -63,7 +63,7 @@ function gameInfoHtml(court, players) {
         increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
         const decreasePlayerScore = ce('button');
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id, court.par) })
+        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) })
 
         const scoreSpan = ce('span');
         scoreSpan.innerText = player.scores[court.id] || 0;
@@ -209,7 +209,7 @@ async function decreaseScore(players, id, courtId) {
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
-    if (!player.scores[courtId]) return; // if score is 0 or undefined or null, do nothing
+    if (!player.scores[courtId]) return; // if score is 0 or undefined or null, do nothing --> no neg scores
 
     player.scores[courtId] -= 1;
     saveToStorage(players);
