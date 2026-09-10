@@ -14,6 +14,8 @@ document.querySelector('.saveGameBtn').addEventListener('click', () => { saveGam
 document.querySelector('.startNewGameBtn').addEventListener('click', () => { startNewGame() })
 
 
+
+
 // CREATE
 document.querySelector('.addPlayer form')
     .addEventListener('submit', e => {
@@ -60,10 +62,12 @@ function gameInfoHtml(court, players) {
         const playerScoreField = ce('td');
         const increasePlayerScore = ce('button');
         increasePlayerScore.innerText = '+';
-        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id) }) // dunno what to send in here yet 
+        increasePlayerScore.addEventListener('click', () => { increaseScore(players, player.id, court.id); }, { once: true }); 
+        // button only fires once per render, otherwise it can go from 1 --> 3 
+
         const decreasePlayerScore = ce('button');
         decreasePlayerScore.innerText = '-';
-        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) })
+        decreasePlayerScore.addEventListener('click', () => { decreaseScore(players, player.id, court.id) }, {once: true});
 
         const scoreSpan = ce('span');
         scoreSpan.innerText = player.scores[court.id] || 0;
@@ -110,7 +114,8 @@ async function printGameInfo(players) {
     }
 }
 
-// RESET GAME / SAVE GAME --> NOT USED REALLY
+
+// RESET GAME / SAVE GAME 
 
 function saveGame() {
     const currentGameInfo = localStorage.getItem('List');
@@ -122,9 +127,9 @@ function displaySavedGames() {
     savedGamesDiv.replaceChildren();
 
     // loop through localStorage and find all saved games fr
-    // i = o then it keeps going if its less than the lenght --> ++ is +=1 basically rawr
+    // i = 0 then it keeps going if its less than the length --> increment by 1 each time
     for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i); //ts wikll hopefully never be null yes
+        const key = localStorage.key(i); //ts will hopefully never be null yes
 
         // filtrera bort orelevanta spel basically 
         if (!key.startsWith("game_")) {
@@ -196,9 +201,11 @@ function startNewGame() {
 // SCORE CONTROL  
 
 async function increaseScore(players, id, courtId) {
+    //console.log("increaseScore trigger at ", courtId);
     const player = players.find(p => p.id == id);
 
     if (player.scores[courtId] === undefined || player.scores[courtId] === null) player.scores[courtId] = 0;
+    //console.log(player.scores[courtId])
     player.scores[courtId] += 1;
 
     saveToStorage(players);
@@ -370,7 +377,7 @@ function ce(elementType, className = null) {
 // GET SCORE CARD ROUNDS FROM JSON FILE 
 async function getGameInfo() {
     const jsonCard = await fetch("info.json");
-    const card = await jsonCard.json(); //automatic JsonParse if you will 
+    const card = await jsonCard.json(); //automatic JsonParse if you will --> convert text to object / arr
     //console.log(card);
     return card;
 }
@@ -404,18 +411,10 @@ function saveGameToLocalStorage(data) {
     localStorage.setItem(`game_${nameOfGame}`, data);
 }
 
-// this one isnt used yet 
-async function getSavedGameInfo() {
-    const jsonCard = await fetch("SavedGames.json");
-    const card = await jsonCard.json();
-    console.log(card);
-    return card;
-}
-
 // update totals stuff 
 async function updateGameViews(players) {
     const gameInfo = await getGameInfo();
-    printGameInfo(players);
+    await printGameInfo(players);
     showTotals(players, gameInfo);
 }
 

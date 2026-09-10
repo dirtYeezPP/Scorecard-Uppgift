@@ -109,3 +109,13 @@ vi kan konvertera till set och kolla dess storlek, säg 1 --> alla har spelat li
 s.sort() --> går ej, ej kopplat till set, de sorteras ej
 let sorted = Array.from(s).sort() --> now we can sort it yes --> gives array 
 då kan vi också ta sorted.pop( ) ta ut den sista och få det största värdet och vi vet hur många rundor vi vill expecta att alla har spelat! så de är de med i resultat winner grejen eller inte. 
+
+``` js
+// NOT USED
+/* async function getSavedGameInfo() {
+    const jsonCard = await fetch("SavedGames.json");
+    const card = await jsonCard.json();
+    console.log(card);
+    return card;
+} */ 
+```
